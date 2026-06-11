@@ -18,7 +18,6 @@
   input,textarea,button{font-family:inherit;}
   input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
   ::-webkit-scrollbar{display:none;}
-  textarea{resize:vertical;}
 </style>
 </head>
 <body>
@@ -27,696 +26,74 @@
 "use strict";
 
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
-function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
-function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
-function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
-function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
-function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
-function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
 var _React = React,
   useState = _React.useState,
-  useEffect = _React.useEffect,
-  useRef = _React.useRef;
+  useEffect = _React.useEffect;
 function store(k, v) {
   try {
+    if (v === undefined) return JSON.parse(localStorage.getItem(k));
     localStorage.setItem(k, JSON.stringify(v));
-  } catch (_unused) {}
+  } catch (e) {}
 }
-function load(k, fb) {
-  try {
-    var v = localStorage.getItem(k);
-    return v !== null ? JSON.parse(v) : fb;
-  } catch (_unused2) {
-    return fb;
-  }
-}
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
+var ALL_DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 function getDay() {
-  return ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][new Date().getDay()];
+  var d = new Date().getDay();
+  return ALL_DAYS[d === 0 ? 6 : d - 1];
 }
+var DC = {
+  MON: "#3B82F6",
+  TUE: "#8B5CF6",
+  WED: "#10B981",
+  THU: "#F59E0B",
+  FRI: "#EF4444",
+  SAT: "#EC4899",
+  SUN: "#6366F1"
+};
 var SCHEDULE = {
   MON: {
-    label: "Monday",
-    gym: "Upper — Strength",
-    wake: "5:30",
-    blocks: [{
-      time: "5:30",
-      task: "Wake. Water. No phone."
-    }, {
-      time: "5:35",
-      task: "Personal development"
-    }, {
-      time: "6:05",
-      task: "Leave for gym"
-    }, {
-      time: "6:10",
-      task: "Gym — Upper Strength"
-    }, {
-      time: "7:05",
-      task: "Shower + get ready"
-    }, {
-      time: "7:25",
-      task: "Breakfast + pack lunch"
-    }, {
-      time: "8:50",
-      task: "Leave for work"
-    }, {
-      time: "9:00",
-      task: "9-5 starts"
-    }, {
-      time: "16:45",
-      task: "Write 2 business priorities ✦"
-    }, {
-      time: "17:30",
-      task: "Dinner"
-    }, {
-      time: "18:00",
-      task: "Deep work 1 (90 min)"
-    }, {
-      time: "19:30",
-      task: "Break (15 min)"
-    }, {
-      time: "19:45",
-      task: "Deep work 2 (75 min)"
-    }, {
-      time: "21:00",
-      task: "Admin + plan tomorrow"
-    }, {
-      time: "21:30",
-      task: "Hard stop ✦"
-    }, {
-      time: "21:55",
-      task: "Wind down"
-    }, {
-      time: "22:30",
-      task: "Sleep"
-    }]
+    label: "Push + INA",
+    wake: "07:00",
+    gym: "Push (Chest/Shoulders/Triceps)"
   },
   TUE: {
-    label: "Tuesday",
-    gym: "Lower — Strength",
-    wake: "5:30",
-    blocks: [{
-      time: "5:30",
-      task: "Wake. Water. No phone."
-    }, {
-      time: "5:35",
-      task: "Personal development"
-    }, {
-      time: "6:05",
-      task: "Leave for gym"
-    }, {
-      time: "6:10",
-      task: "Gym — Lower Strength"
-    }, {
-      time: "7:05",
-      task: "Shower + get ready"
-    }, {
-      time: "7:25",
-      task: "Breakfast + pack lunch"
-    }, {
-      time: "8:50",
-      task: "Leave for work"
-    }, {
-      time: "9:00",
-      task: "9-5 starts"
-    }, {
-      time: "16:45",
-      task: "Write 2 business priorities ✦"
-    }, {
-      time: "17:30",
-      task: "Dinner"
-    }, {
-      time: "18:00",
-      task: "Deep work 1 (90 min)"
-    }, {
-      time: "19:30",
-      task: "Break (15 min)"
-    }, {
-      time: "19:45",
-      task: "Deep work 2 (75 min)"
-    }, {
-      time: "21:00",
-      task: "Admin + plan tomorrow"
-    }, {
-      time: "21:30",
-      task: "Hard stop ✦"
-    }, {
-      time: "21:55",
-      task: "Wind down"
-    }, {
-      time: "22:30",
-      task: "Sleep"
-    }]
+    label: "Pull + Content",
+    wake: "07:00",
+    gym: "Pull (Back/Biceps)"
   },
   WED: {
-    label: "Wednesday",
-    gym: null,
-    wake: "5:30",
-    blocks: [{
-      time: "5:30",
-      task: "Wake. Water. No phone."
-    }, {
-      time: "5:35",
-      task: "Personal development (30 min)"
-    }, {
-      time: "6:05",
-      task: "Free time / extra rest"
-    }, {
-      time: "7:25",
-      task: "Breakfast + pack lunch"
-    }, {
-      time: "8:50",
-      task: "Leave for work"
-    }, {
-      time: "9:00",
-      task: "9-5 starts"
-    }, {
-      time: "16:45",
-      task: "Write 2 business priorities ✦"
-    }, {
-      time: "17:30",
-      task: "Dinner"
-    }, {
-      time: "18:00",
-      task: "Deep work 1 (90 min)"
-    }, {
-      time: "19:30",
-      task: "Break (15 min)"
-    }, {
-      time: "19:45",
-      task: "Deep work 2 (75 min)"
-    }, {
-      time: "21:00",
-      task: "Admin + plan tomorrow"
-    }, {
-      time: "21:30",
-      task: "Hard stop ✦"
-    }, {
-      time: "21:55",
-      task: "Wind down"
-    }, {
-      time: "22:30",
-      task: "Sleep"
-    }]
+    label: "Legs + INA",
+    wake: "07:00",
+    gym: "Legs (Quads/Hams/Calves)"
   },
   THU: {
-    label: "Thursday",
-    gym: "Core & Weak Points",
-    wake: "6:00",
-    blocks: [{
-      time: "6:00",
-      task: "Wake. Water. No phone."
-    }, {
-      time: "6:05",
-      task: "Personal development"
-    }, {
-      time: "6:35",
-      task: "Gym — Core & Weak Points"
-    }, {
-      time: "7:20",
-      task: "Breakfast + pack lunch"
-    }, {
-      time: "8:50",
-      task: "Leave for work"
-    }, {
-      time: "9:00",
-      task: "9-5 starts"
-    }, {
-      time: "16:45",
-      task: "Write 2 business priorities ✦"
-    }, {
-      time: "17:30",
-      task: "Dinner"
-    }, {
-      time: "18:00",
-      task: "Deep work 1 (90 min)"
-    }, {
-      time: "19:30",
-      task: "Break (15 min)"
-    }, {
-      time: "19:45",
-      task: "Deep work 2 (75 min)"
-    }, {
-      time: "21:00",
-      task: "Admin + plan tomorrow"
-    }, {
-      time: "21:30",
-      task: "Hard stop ✦"
-    }, {
-      time: "21:55",
-      task: "Wind down"
-    }, {
-      time: "22:30",
-      task: "Sleep"
-    }]
+    label: "Push + Content",
+    wake: "07:00",
+    gym: "Push variation"
   },
   FRI: {
-    label: "Friday",
-    gym: "Upper — Hypertrophy",
-    wake: "5:30",
-    blocks: [{
-      time: "5:30",
-      task: "Wake. Water. No phone."
-    }, {
-      time: "5:35",
-      task: "Personal development"
-    }, {
-      time: "6:05",
-      task: "Leave for gym"
-    }, {
-      time: "6:10",
-      task: "Gym — Upper Hypertrophy"
-    }, {
-      time: "7:05",
-      task: "Shower + get ready"
-    }, {
-      time: "7:25",
-      task: "Breakfast + pack lunch"
-    }, {
-      time: "8:50",
-      task: "Leave for work"
-    }, {
-      time: "9:00",
-      task: "9-5 starts"
-    }, {
-      time: "16:45",
-      task: "Write 2 business priorities ✦"
-    }, {
-      time: "17:30",
-      task: "Dinner"
-    }, {
-      time: "18:00",
-      task: "Deep work 1 (90 min)"
-    }, {
-      time: "19:30",
-      task: "Break (15 min)"
-    }, {
-      time: "19:45",
-      task: "Deep work 2 (75 min)"
-    }, {
-      time: "21:00",
-      task: "Admin + plan tomorrow"
-    }, {
-      time: "21:30",
-      task: "Hard stop ✦"
-    }, {
-      time: "21:55",
-      task: "Wind down"
-    }, {
-      time: "22:30",
-      task: "Sleep"
-    }]
+    label: "Pull + INA",
+    wake: "07:00",
+    gym: "Pull variation"
   },
   SAT: {
-    label: "Saturday",
-    gym: "Lower — Hypertrophy",
-    wake: "7:00",
-    blocks: [{
-      time: "7:00",
-      task: "Wake"
-    }, {
-      time: "7:10",
-      task: "Breakfast"
-    }, {
-      time: "7:30",
-      task: "Leave for gym"
-    }, {
-      time: "7:35",
-      task: "Gym — Lower Hypertrophy"
-    }, {
-      time: "8:30",
-      task: "Shower"
-    }, {
-      time: "9:00",
-      task: "Deep work 1 (90 min)"
-    }, {
-      time: "10:30",
-      task: "Break (15 min)"
-    }, {
-      time: "10:45",
-      task: "Deep work 2 (90 min)"
-    }, {
-      time: "12:15",
-      task: "Lunch"
-    }, {
-      time: "13:00",
-      task: "Deep work 3 (90 min)"
-    }, {
-      time: "14:30",
-      task: "Break + walk"
-    }, {
-      time: "15:00",
-      task: "Admin / content / lighter tasks"
-    }, {
-      time: "16:30",
-      task: "FREE TIME ✦ Switch off."
-    }, {
-      time: "19:00",
-      task: "Batch cook prep"
-    }, {
-      time: "21:55",
-      task: "Wind down"
-    }, {
-      time: "22:00",
-      task: "Sleep"
-    }]
+    label: "Rest + Batch",
+    wake: "08:30",
+    gym: null
   },
   SUN: {
-    label: "Sunday",
-    gym: null,
-    wake: "7:30",
-    blocks: [{
-      time: "7:30",
-      task: "Wake"
-    }, {
-      time: "8:00",
-      task: "Breakfast"
-    }, {
-      time: "8:30",
-      task: "Weekly review (30 min)"
-    }, {
-      time: "9:00",
-      task: "Plan the week (30 min)"
-    }, {
-      time: "9:30",
-      task: "Batch cook (60–90 min) ✦"
-    }, {
-      time: "11:00",
-      task: "FREE TIME. Full rest."
-    }, {
-      time: "17:30",
-      task: "Dinner"
-    }, {
-      time: "18:00",
-      task: "Light business prep (30 min max)"
-    }, {
-      time: "21:30",
-      task: "Wind down"
-    }, {
-      time: "22:00",
-      task: "Sleep"
-    }]
+    label: "Rest + Review",
+    wake: "08:30",
+    gym: null
   }
-};
-var PROGRAM = {
-  MON: {
-    tag: "Upper — Strength",
-    duration: "~60 min",
-    exercises: [{
-      id: "bench",
-      name: "Flat Bench Press",
-      sets: 4,
-      repRange: "5–8",
-      category: "Chest",
-      note: "Straight sets"
-    }, {
-      id: "incline_mon",
-      name: "Incline DB Press",
-      sets: 3,
-      repRange: "6–10",
-      category: "Chest",
-      note: "Straight sets"
-    }, {
-      id: "deadlift",
-      name: "Deadlift",
-      sets: 3,
-      repRange: "5–8",
-      category: "Back",
-      note: "Straight sets"
-    }, {
-      id: "tbar_mon",
-      name: "T-Bar Row",
-      sets: 3,
-      repRange: "8–12",
-      category: "Back",
-      note: "Straight sets"
-    }, {
-      id: "lateral_mon",
-      name: "Lateral Raises",
-      sets: 3,
-      repRange: "12–15",
-      category: "Shoulders",
-      note: ""
-    }, {
-      id: "bbcurl_mon",
-      name: "Barbell Curl",
-      sets: 3,
-      repRange: "8–12",
-      category: "Biceps",
-      note: ""
-    }, {
-      id: "cgbench",
-      name: "Close-Grip Bench",
-      sets: 3,
-      repRange: "8–12",
-      category: "Triceps",
-      note: ""
-    }]
-  },
-  TUE: {
-    tag: "Lower — Strength",
-    duration: "~50 min",
-    exercises: [{
-      id: "squat",
-      name: "Barbell Squat",
-      sets: 4,
-      repRange: "5–8",
-      category: "Quads",
-      note: "Straight sets"
-    }, {
-      id: "rdl_tue",
-      name: "Romanian Deadlift",
-      sets: 3,
-      repRange: "6–10",
-      category: "Hamstrings",
-      note: ""
-    }, {
-      id: "legext_tue",
-      name: "Leg Extension",
-      sets: 3,
-      repRange: "10–15",
-      category: "Quads",
-      note: ""
-    }, {
-      id: "legcurl_tue",
-      name: "Lying Leg Curl",
-      sets: 3,
-      repRange: "10–15",
-      category: "Hamstrings",
-      note: ""
-    }, {
-      id: "calf_tue",
-      name: "Calf Raises",
-      sets: 3,
-      repRange: "12–15",
-      category: "Calves",
-      note: ""
-    }]
-  },
-  THU: {
-    tag: "Core & Weak Points",
-    duration: "~40 min",
-    exercises: [{
-      id: "facepull",
-      name: "Face Pulls",
-      sets: 3,
-      repRange: "15–20",
-      category: "Shoulders",
-      note: "Rear delt health"
-    }, {
-      id: "reardelt",
-      name: "Rear Delt Fly",
-      sets: 3,
-      repRange: "15–20",
-      category: "Shoulders",
-      note: ""
-    }, {
-      id: "farmers",
-      name: "Farmer's Carries",
-      sets: 3,
-      repRange: "40m",
-      category: "Core",
-      note: "Grip + trunk"
-    }, {
-      id: "legraise",
-      name: "Leg Raise + Knee Tuck",
-      sets: 3,
-      repRange: "15–20",
-      category: "Core",
-      note: "Superset"
-    }, {
-      id: "crunch",
-      name: "Weighted Crunches",
-      sets: 3,
-      repRange: "15–20",
-      category: "Core",
-      note: ""
-    }, {
-      id: "woodchop",
-      name: "Cable Woodchop",
-      sets: 3,
-      repRange: "12–15",
-      category: "Core",
-      note: "Each side"
-    }, {
-      id: "mobility",
-      name: "Mobility + Stretch",
-      sets: 1,
-      repRange: "—",
-      category: "Mobility",
-      note: ""
-    }]
-  },
-  FRI: {
-    tag: "Upper — Hypertrophy",
-    duration: "~55 min",
-    exercises: [{
-      id: "incline_fri",
-      name: "Incline DB Press",
-      sets: 3,
-      repRange: "8–12",
-      category: "Chest",
-      note: "Top set"
-    }, {
-      id: "flatbb_fri",
-      name: "Flat Barbell Press",
-      sets: 3,
-      repRange: "6–10",
-      category: "Chest",
-      note: "Top set"
-    }, {
-      id: "pulldown",
-      name: "Lat Pulldown",
-      sets: 3,
-      repRange: "8–12",
-      category: "Back",
-      note: ""
-    }, {
-      id: "tbar_fri",
-      name: "T-Bar Row",
-      sets: 2,
-      repRange: "10–12",
-      category: "Back",
-      note: ""
-    }, {
-      id: "lateral_fri",
-      name: "Lateral Raises",
-      sets: 2,
-      repRange: "12–15",
-      category: "Shoulders",
-      note: ""
-    }, {
-      id: "cablelat",
-      name: "Cable Lateral Raises",
-      sets: 2,
-      repRange: "12–15",
-      category: "Shoulders",
-      note: ""
-    }, {
-      id: "bbcurl_fri",
-      name: "Barbell Curl",
-      sets: 3,
-      repRange: "8–12",
-      category: "Biceps",
-      note: "Top set"
-    }, {
-      id: "hammer",
-      name: "Hammer Curl",
-      sets: 2,
-      repRange: "10–15",
-      category: "Biceps",
-      note: ""
-    }, {
-      id: "ohcable",
-      name: "Overhead Cable Ext",
-      sets: 3,
-      repRange: "10–12",
-      category: "Triceps",
-      note: ""
-    }, {
-      id: "pushdown",
-      name: "Rope Pushdown",
-      sets: 2,
-      repRange: "12–15",
-      category: "Triceps",
-      note: "60s rest"
-    }]
-  },
-  SAT: {
-    tag: "Lower — Hypertrophy",
-    duration: "~50 min",
-    exercises: [{
-      id: "hacksquat",
-      name: "Hack Squat",
-      sets: 3,
-      repRange: "8–12",
-      category: "Quads",
-      note: "Alt w/ BB Squat"
-    }, {
-      id: "seatedcurl",
-      name: "Seated / Nordic Curl",
-      sets: 3,
-      repRange: "8–12",
-      category: "Hamstrings",
-      note: ""
-    }, {
-      id: "legext_sat",
-      name: "Leg Extension",
-      sets: 3,
-      repRange: "12–15",
-      category: "Quads",
-      note: ""
-    }, {
-      id: "legcurl_sat",
-      name: "Lying Leg Curl",
-      sets: 3,
-      repRange: "12–15",
-      category: "Hamstrings",
-      note: ""
-    }, {
-      id: "calf_sat",
-      name: "Calf Raises",
-      sets: 3,
-      repRange: "12–15",
-      category: "Calves",
-      note: ""
-    }]
-  }
-};
-var GYM_DAYS = ["MON", "TUE", "THU", "FRI", "SAT"];
-var ALL_DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-var DC = {
-  MON: "#2563EB",
-  TUE: "#7C3AED",
-  WED: "#0891B2",
-  THU: "#059669",
-  FRI: "#DC2626",
-  SAT: "#D97706",
-  SUN: "#6B7280"
-};
-var CC = {
-  Chest: "#EC4899",
-  Back: "#3B82F6",
-  Shoulders: "#F59E0B",
-  Quads: "#8B5CF6",
-  Hamstrings: "#10B981",
-  Calves: "#06B6D4",
-  Biceps: "#F97316",
-  Triceps: "#EF4444",
-  Core: "#84CC16",
-  Mobility: "#6B7280"
 };
 var HABITS = [{
   id: "water_wake",
@@ -822,84 +199,188 @@ var MEALS = [{
   kcal: 150,
   cat: "snack"
 }];
-function SI(_ref) {
-  var sk = _ref.sk,
-    placeholder = _ref.placeholder,
-    _ref$type = _ref.type,
-    type = _ref$type === void 0 ? "text" : _ref$type,
-    _ref$style = _ref.style,
-    style = _ref$style === void 0 ? {} : _ref$style,
-    _ref$multi = _ref.multi,
-    multi = _ref$multi === void 0 ? false : _ref$multi;
-  var ref = useRef(null);
-  useEffect(function () {
-    if (ref.current) {
-      var v = load(sk, "");
-      ref.current.value = v || "";
-    }
-  }, [sk]);
-  var onChange = function onChange(e) {
-    return store(sk, e.target.value);
+var TABS = [{
+  id: "today",
+  label: "TODAY",
+  icon: "🗓",
+  color: "#3B82F6"
+}, {
+  id: "habits",
+  label: "HABITS",
+  icon: "✅",
+  color: "#10B981"
+}, {
+  id: "training",
+  label: "TRAIN",
+  icon: "🏋️",
+  color: "#F59E0B"
+}, {
+  id: "ina",
+  label: "INA",
+  icon: "📈",
+  color: "#EF4444"
+}, {
+  id: "finance",
+  label: "MONEY",
+  icon: "💰",
+  color: "#8B5CF6"
+}];
+var card = {
+  background: "#111",
+  borderRadius: 10,
+  padding: "14px",
+  marginBottom: 8
+};
+var row = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center"
+};
+var inp = {
+  width: "100%",
+  background: "#1a1a1a",
+  border: "1px solid #222",
+  borderRadius: 8,
+  padding: "10px 12px",
+  color: "#E0DDD6",
+  fontSize: 14,
+  outline: "none",
+  boxSizing: "border-box"
+};
+var lbl = {
+  fontSize: 10,
+  fontWeight: 700,
+  letterSpacing: "0.12em",
+  color: "#444",
+  textTransform: "uppercase"
+};
+function pill(col, active) {
+  return {
+    padding: "4px 10px",
+    borderRadius: 20,
+    border: "none",
+    background: active ? col : "#1a1a1a",
+    color: active ? "#fff" : "#555",
+    fontSize: 11,
+    fontWeight: 600,
+    cursor: "pointer",
+    whiteSpace: "nowrap"
   };
-  if (multi) return /*#__PURE__*/React.createElement("textarea", {
-    ref: ref,
-    placeholder: placeholder,
-    onChange: onChange,
-    style: _objectSpread(_objectSpread({}, style), {}, {
-      resize: "vertical"
-    })
-  });
-  return /*#__PURE__*/React.createElement("input", {
-    ref: ref,
-    type: type,
-    placeholder: placeholder,
-    onChange: onChange,
-    style: style
-  });
+}
+function abtn(col) {
+  return {
+    background: col,
+    color: "#fff",
+    border: "none",
+    borderRadius: 8,
+    padding: "10px 16px",
+    fontWeight: 700,
+    fontSize: 13,
+    cursor: "pointer",
+    width: "100%"
+  };
+}
+function atag(col) {
+  return {
+    background: col + "22",
+    color: col,
+    borderRadius: 6,
+    padding: "2px 8px",
+    fontSize: 11,
+    fontWeight: 600
+  };
+}
+function tbtn(active, col) {
+  return {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 2,
+    padding: "8px 0",
+    background: "none",
+    border: "none",
+    color: active ? col : "#444",
+    cursor: "pointer"
+  };
 }
 function App() {
+  var today = getDay();
   var _useState = useState("today"),
     _useState2 = _slicedToArray(_useState, 2),
     tab = _useState2[0],
     setTab = _useState2[1];
-  var _useState3 = useState(getDay() in SCHEDULE ? getDay() : "MON"),
+  var _useState3 = useState(today),
     _useState4 = _slicedToArray(_useState3, 2),
     schedDay = _useState4[0],
     setSchedDay = _useState4[1];
-  var _useState5 = useState(GYM_DAYS.includes(getDay()) ? getDay() : "MON"),
+  var _useState5 = useState(function () {
+      return store("habits_" + new Date().toDateString()) || {};
+    }),
     _useState6 = _slicedToArray(_useState5, 2),
-    trainDay = _useState6[0],
-    setTrainDay = _useState6[1];
-  var _useState7 = useState(load("train_wk", 1)),
+    habits = _useState6[0],
+    setHabits = _useState6[1];
+  var _useState7 = useState(function () {
+      return store("plog_" + new Date().toDateString()) || [];
+    }),
     _useState8 = _slicedToArray(_useState7, 2),
-    trainWk = _useState8[0],
-    setTrainWk = _useState8[1];
-  var _useState9 = useState(false),
+    pLog = _useState8[0],
+    setPLog = _useState8[1];
+  var _useState9 = useState(function () {
+      return store("train_wk") || {};
+    }),
     _useState0 = _slicedToArray(_useState9, 2),
-    saved = _useState0[0],
-    setSaved = _useState0[1];
-  var _useState1 = useState(load("h_".concat(today()), {})),
+    trainWk = _useState0[0],
+    setTrainWk = _useState0[1];
+  var _useState1 = useState(function () {
+      return store("ina_dm") || {
+        sent: 0,
+        replies: 0,
+        calls: 0
+      };
+    }),
     _useState10 = _slicedToArray(_useState1, 2),
-    habits = _useState10[0],
-    setHabits = _useState10[1];
-  var _useState11 = useState(load("p_".concat(today()), [])),
+    dm = _useState10[0],
+    setDm = _useState10[1];
+  var _useState11 = useState(function () {
+      return store("ina_em") || {
+        sent: 0,
+        replies: 0,
+        calls: 0
+      };
+    }),
     _useState12 = _slicedToArray(_useState11, 2),
-    pLog = _useState12[0],
-    setPLog = _useState12[1];
+    em = _useState12[0],
+    setEm = _useState12[1];
+  var _useState13 = useState(function () {
+      return store("finance_tx") || [];
+    }),
+    _useState14 = _slicedToArray(_useState13, 2),
+    tx = _useState14[0],
+    setTx = _useState14[1];
   useEffect(function () {
-    store("h_".concat(today()), habits);
+    store("habits_" + new Date().toDateString(), habits);
   }, [habits]);
   useEffect(function () {
-    store("p_".concat(today()), pLog);
+    store("plog_" + new Date().toDateString(), pLog);
   }, [pLog]);
   useEffect(function () {
     store("train_wk", trainWk);
   }, [trainWk]);
-  var toggle = function toggle(id) {
-    return setHabits(function (h) {
-      return _objectSpread(_objectSpread({}, h), {}, _defineProperty({}, id, !h[id]));
-    });
-  };
+  useEffect(function () {
+    store("ina_dm", dm);
+  }, [dm]);
+  useEffect(function () {
+    store("ina_em", em);
+  }, [em]);
+  useEffect(function () {
+    store("finance_tx", tx);
+  }, [tx]);
+  var isWknd = ["SAT", "SUN"].includes(getDay());
+  var allH = isWknd ? HABITS.concat(WKND_HABITS) : HABITS;
+  var hDone = allH.filter(function (h) {
+    return habits[h.id];
+  }).length;
   var pTotal = pLog.reduce(function (s, e) {
     return s + e.amount;
   }, 0);
@@ -908,10 +389,16 @@ function App() {
   }, 0);
   var pTarget = 130;
   var kcalTarget = 2500;
+  var sc = SCHEDULE[schedDay];
+  function toggle(id) {
+    setHabits(function (h) {
+      return Object.assign({}, h, _defineProperty({}, id, !h[id]));
+    });
+  }
   function addP(name, amount, kcal, cb) {
     if (!amount || isNaN(amount)) return;
     setPLog(function (p) {
-      return [].concat(_toConsumableArray(p), [{
+      return p.concat([{
         name: name,
         amount: parseInt(amount),
         kcal: parseInt(kcal) || 0,
@@ -923,1196 +410,481 @@ function App() {
     });
     if (cb) cb();
   }
-  function removeP(i) {
-    setPLog(function (p) {
-      return p.filter(function (_, idx) {
-        return idx !== i;
-      });
-    });
-  }
-  function tKey(w, d, ex, s, f) {
-    return "t_".concat(w, "_").concat(d, "_").concat(ex, "_").concat(s, "_").concat(f);
-  }
-  function getPrev(ex, si, f) {
-    if (trainWk <= 1) return "";
-    return load(tKey(trainWk - 1, trainDay, ex, si, f), "");
-  }
-  function saveTrain() {
-    setSaved(true);
-    setTimeout(function () {
-      return setSaved(false);
-    }, 2000);
-  }
-  var dc = DC[schedDay] || "#2563EB";
-  var tc = DC[trainDay] || "#2563EB";
-  var S = {
-    wrap: {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
       minHeight: "100vh",
       background: "#080808",
       color: "#E0DDD6",
-      paddingBottom: 72,
-      maxWidth: 480,
-      margin: "0 auto"
-    },
-    hdr: {
-      padding: "28px 20px 14px",
-      borderBottom: "1px solid #141414"
-    },
-    sec: {
-      padding: "16px 20px"
-    },
-    card: {
-      background: "#0F0F0F",
-      border: "1px solid #1A1A1A",
-      borderRadius: 12,
-      padding: "16px",
-      marginBottom: 12
-    },
-    lbl: {
-      fontSize: 10,
-      color: "#444",
-      letterSpacing: "0.12em",
-      textTransform: "uppercase",
-      marginBottom: 6,
-      display: "block"
-    },
-    inp: {
-      background: "#141414",
-      border: "1px solid #222",
-      borderRadius: 8,
-      color: "#CCC",
-      fontSize: 13,
-      padding: "9px 12px",
-      width: "100%",
-      outline: "none",
-      boxSizing: "border-box"
-    },
-    num: {
-      background: "#141414",
-      border: "1px solid #1E1E1E",
-      borderRadius: 6,
-      color: "#CCC",
-      fontSize: 13,
-      padding: "7px 4px",
-      width: "100%",
-      outline: "none",
-      textAlign: "center",
-      boxSizing: "border-box"
-    },
-    btn: function btn(bg) {
-      return {
-        background: bg,
-        border: "none",
-        borderRadius: 8,
-        color: "#fff",
-        cursor: "pointer",
-        fontSize: 13,
-        fontWeight: 600,
-        padding: "10px 16px",
-        flexShrink: 0
-      };
-    },
-    pill: function pill(c, a) {
-      return {
-        background: a ? c : "#111",
-        border: "1px solid ".concat(a ? c : "#1E1E1E"),
-        borderRadius: 20,
-        color: a ? "#fff" : "#555",
-        cursor: "pointer",
-        fontSize: 11,
-        fontWeight: 600,
-        padding: "5px 11px",
-        whiteSpace: "nowrap"
-      };
-    },
-    bar: {
-      position: "fixed",
-      bottom: 0,
-      left: "50%",
-      transform: "translateX(-50%)",
-      width: "100%",
-      maxWidth: 480,
-      background: "#0A0A0A",
-      borderTop: "1px solid #161616",
-      display: "flex",
-      zIndex: 100
-    },
-    tbtn: function tbtn(a, c) {
-      return {
-        flex: 1,
-        background: "none",
-        border: "none",
-        cursor: "pointer",
-        padding: "10px 4px 8px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 3,
-        color: a ? c : "#3A3A3A"
-      };
+      paddingBottom: 80
     }
-  };
-  function TodayTab() {
-    var sc = SCHEDULE[schedDay];
-    var now = new Date();
-    var nm = now.getHours() * 60 + now.getMinutes();
-    var tm = function tm(t) {
-      if (!t) return 0;
-      var _t$split$map = t.split(":").map(Number),
-        _t$split$map2 = _slicedToArray(_t$split$map, 2),
-        h = _t$split$map2[0],
-        m = _t$split$map2[1];
-      return h * 60 + m;
-    };
-    var isCur = function isCur(t, nt) {
-      return tm(t) <= nm && (!nt || nm < tm(nt));
-    };
-    var isPast = function isPast(t, nt) {
-      return !isCur(t, nt) && tm(t) < nm;
-    };
-    var isWknd = ["SAT", "SUN"].includes(getDay());
-    var allH = isWknd ? [].concat(HABITS, WKND_HABITS) : HABITS;
-    var hDone = allH.filter(function (h) {
-      return habits[h.id];
-    }).length;
-    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-      style: S.hdr
-    }, /*#__PURE__*/React.createElement("span", {
-      style: S.lbl
-    }, "Daily OS"), /*#__PURE__*/React.createElement("h1", {
+  }, tab === "today" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "16px 16px 8px",
+      borderBottom: "1px solid #1a1a1a"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: lbl
+  }, "Daily OS"), /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontSize: 20,
+      fontWeight: 700,
+      margin: "4px 0 10px"
+    }
+  }, sc ? sc.label : ""), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 5,
+      overflowX: "auto",
+      paddingBottom: 4
+    }
+  }, ALL_DAYS.map(function (d) {
+    return /*#__PURE__*/React.createElement("button", {
+      key: d,
+      onClick: function onClick() {
+        setSchedDay(d);
+      },
+      style: pill(DC[d], schedDay === d)
+    }, d.slice(0, 2));
+  })), sc && sc.gym && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 8,
+      fontSize: 12,
+      color: DC[schedDay],
+      fontWeight: 600
+    }
+  }, "\uD83C\uDFCB\uFE0F ", sc.gym)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "12px 16px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 8
+    }
+  }, [{
+    label: "Habits",
+    value: hDone + "/" + allH.length,
+    color: hDone === allH.length ? "#059669" : "#E0DDD6"
+  }, {
+    label: "Wake",
+    value: sc ? sc.wake : "—",
+    color: "#E0DDD6"
+  }, {
+    label: "Protein",
+    value: pTotal + "g",
+    color: pTotal >= pTarget ? "#059669" : pTotal > 70 ? "#D97706" : "#E0DDD6"
+  }, {
+    label: "Calories",
+    value: "" + kcalTotal,
+    color: kcalTotal >= kcalTarget ? "#059669" : kcalTotal > 1500 ? "#D97706" : "#E0DDD6"
+  }].map(function (s, i) {
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: Object.assign({}, card, {
+        padding: "12px",
+        marginBottom: 0,
+        textAlign: "center"
+      })
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: 700,
-        margin: "0 0 10px"
+        color: s.color
       }
-    }, sc === null || sc === void 0 ? void 0 : sc.label), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        gap: 5,
-        overflowX: "auto",
-        paddingBottom: 4
-      }
-    }, ALL_DAYS.map(function (d) {
-      return /*#__PURE__*/React.createElement("button", {
-        key: d,
-        onClick: function onClick() {
-          return setSchedDay(d);
-        },
-        style: S.pill(DC[d], schedDay === d)
-      }, d.slice(0, 2));
-    })), (sc === null || sc === void 0 ? void 0 : sc.gym) && /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginTop: 8,
-        fontSize: 12,
-        color: dc,
-        fontWeight: 600
-      }
-    }, "\uD83C\uDFCB\uFE0F ", sc.gym)), /*#__PURE__*/React.createElement("div", {
-      style: S.sec
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: 8,
-        marginBottom: 14
-      }
-    }, [{
-      label: "Habits",
-      value: "".concat(hDone, "/").concat(allH.length),
-      color: hDone === allH.length ? "#059669" : "#E0DDD6"
-    }, {
-      label: "Wake",
-      value: (sc === null || sc === void 0 ? void 0 : sc.wake) || "—",
-      color: "#E0DDD6"
-    }, {
-      label: "Protein",
-      value: "".concat(pTotal, "g"),
-      color: pTotal >= pTarget ? "#059669" : pTotal > 70 ? "#D97706" : "#E0DDD6"
-    }, {
-      label: "Calories",
-      value: "".concat(kcalTotal),
-      color: kcalTotal >= kcalTarget ? "#059669" : kcalTotal > 1500 ? "#D97706" : "#E0DDD6"
-    }].map(function (s, i) {
-      return /*#__PURE__*/React.createElement("div", {
-        key: i,
-        style: _objectSpread(_objectSpread({}, S.card), {}, {
-          padding: "12px",
-          marginBottom: 0,
-          textAlign: "center"
-        })
-      }, /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: 18,
-          fontWeight: 700,
-          color: s.color
-        }
-      }, s.value), /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: 10,
-          color: "#444",
-          marginTop: 2
-        }
-      }, s.label));
-    })), /*#__PURE__*/React.createElement("div", {
-      style: S.card
-    }, /*#__PURE__*/React.createElement("span", {
-      style: S.lbl
-    }, "Schedule"), sc === null || sc === void 0 ? void 0 : sc.blocks.map(function (b, i) {
-      var nx = sc.blocks[i + 1];
-      var cur = isCur(b.time, nx === null || nx === void 0 ? void 0 : nx.time);
-      var past = isPast(b.time, nx === null || nx === void 0 ? void 0 : nx.time);
-      var nn = b.task.includes("✦");
-      return /*#__PURE__*/React.createElement("div", {
-        key: i,
-        style: {
-          display: "flex",
-          gap: 12,
-          padding: "7px 0",
-          borderBottom: i < sc.blocks.length - 1 ? "1px solid #111" : "none",
-          opacity: past ? 0.3 : 1
-        }
-      }, /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 11,
-          color: cur ? dc : "#444",
-          fontWeight: cur ? 700 : 400,
-          minWidth: 36,
-          flexShrink: 0
-        }
-      }, b.time), /*#__PURE__*/React.createElement("div", {
-        style: {
-          display: "flex",
-          alignItems: "center",
-          gap: 5
-        }
-      }, cur && /*#__PURE__*/React.createElement("div", {
-        style: {
-          width: 5,
-          height: 5,
-          borderRadius: "50%",
-          background: dc,
-          flexShrink: 0
-        }
-      }), /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 13,
-          color: cur ? "#E0DDD6" : nn ? "#888" : "#666",
-          fontWeight: cur ? 600 : 400
-        }
-      }, b.task.replace(" ✦", ""), nn && /*#__PURE__*/React.createElement("span", {
-        style: {
-          color: dc,
-          marginLeft: 3,
-          fontSize: 10
-        }
-      }, "\u2726"))));
-    })), /*#__PURE__*/React.createElement("div", {
-      style: S.card
-    }, /*#__PURE__*/React.createElement("span", {
-      style: S.lbl
-    }, "Non-negotiables"), ["Mon–Fri: 5:30 wake — no exceptions", "Sat: 7:00 · Sun: 7:30 — protect recovery", "In bed by 22:30 every weekday", "21:30 hard stop — no exceptions", "Sunday batch cook", "16:45 priorities — before you leave work", "Saturday 16:30 free time — protect it", "Sunday from 11:00 — full rest"].map(function (n, i) {
-      return /*#__PURE__*/React.createElement("div", {
-        key: i,
-        style: {
-          display: "flex",
-          gap: 8,
-          padding: "6px 0",
-          borderBottom: i < 7 ? "1px solid #111" : "none"
-        }
-      }, /*#__PURE__*/React.createElement("span", {
-        style: {
-          color: dc,
-          fontSize: 12
-        }
-      }, "\u2726"), /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 12,
-          color: "#555"
-        }
-      }, n));
-    }))));
-  }
-  function HabitsTab() {
-    var _useState13 = useState(""),
-      _useState14 = _slicedToArray(_useState13, 2),
-      cn = _useState14[0],
-      setCn = _useState14[1];
-    var _useState15 = useState(""),
-      _useState16 = _slicedToArray(_useState15, 2),
-      cg = _useState16[0],
-      setCg = _useState16[1];
-    var _useState17 = useState(""),
-      _useState18 = _slicedToArray(_useState17, 2),
-      ck = _useState18[0],
-      setCk = _useState18[1];
-    var isWknd = ["SAT", "SUN"].includes(getDay());
-    var allH = isWknd ? [].concat(HABITS, WKND_HABITS) : HABITS;
-    var done = allH.filter(function (h) {
-      return habits[h.id];
-    }).length;
-    var pct = Math.round(done / allH.length * 100);
-    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-      style: S.hdr
-    }, /*#__PURE__*/React.createElement("span", {
-      style: S.lbl
-    }, new Date().toLocaleDateString("en-GB", {
-      weekday: "long",
-      day: "numeric",
-      month: "short"
-    })), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
-      }
-    }, /*#__PURE__*/React.createElement("h1", {
-      style: {
-        fontSize: 20,
-        fontWeight: 700,
-        margin: 0
-      }
-    }, "Habits"), /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 24,
-        fontWeight: 700,
-        color: pct === 100 ? "#059669" : "#E0DDD6"
-      }
-    }, pct, "%")), /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginTop: 10,
-        height: 4,
-        background: "#1A1A1A",
-        borderRadius: 4
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        height: 4,
-        background: pct === 100 ? "#059669" : "#2563EB",
-        borderRadius: 4,
-        width: "".concat(pct, "%"),
-        transition: "width 0.3s"
-      }
-    }))), /*#__PURE__*/React.createElement("div", {
-      style: S.sec
-    }, /*#__PURE__*/React.createElement("div", {
-      style: S.card
-    }, allH.map(function (h, i) {
-      return /*#__PURE__*/React.createElement("div", {
-        key: h.id,
-        onClick: function onClick() {
-          return toggle(h.id);
-        },
-        style: {
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          padding: "11px 0",
-          borderBottom: i < allH.length - 1 ? "1px solid #111" : "none",
-          cursor: "pointer"
-        }
-      }, /*#__PURE__*/React.createElement("div", {
-        style: {
-          width: 22,
-          height: 22,
-          borderRadius: 6,
-          border: "2px solid ".concat(habits[h.id] ? "#059669" : "#2A2A2A"),
-          background: habits[h.id] ? "#059669" : "transparent",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-          transition: "all 0.15s"
-        }
-      }, habits[h.id] && /*#__PURE__*/React.createElement("span", {
-        style: {
-          color: "#fff",
-          fontSize: 12
-        }
-      }, "\u2713")), /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 15
-        }
-      }, h.icon), /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 13,
-          color: habits[h.id] ? "#444" : "#CCC",
-          textDecoration: habits[h.id] ? "line-through" : "none"
-        }
-      }, h.label));
-    })), /*#__PURE__*/React.createElement("div", {
-      style: S.card
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        marginBottom: 6
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: S.lbl
-    }, "Nutrition today"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        textAlign: "right"
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 15,
-        fontWeight: 700,
-        color: pTotal >= pTarget ? "#059669" : "#E0DDD6"
-      }
-    }, pTotal, "g ", /*#__PURE__*/React.createElement("span", {
+    }, s.value), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 10,
-        color: "#444"
-      }
-    }, "/", pTarget, "g protein")), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 13,
-        fontWeight: 600,
-        color: kcalTotal >= kcalTarget ? "#059669" : kcalTotal > 1500 ? "#D97706" : "#E0DDD6",
+        color: "#444",
         marginTop: 2
       }
-    }, kcalTotal, " ", /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 10,
-        color: "#444"
-      }
-    }, "/", kcalTarget, " kcal")))), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        marginBottom: 4
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 9,
-        color: "#333",
-        width: 40,
-        textAlign: "right"
-      }
-    }, "protein"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1,
-        height: 4,
-        background: "#1A1A1A",
-        borderRadius: 4
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        height: 4,
-        background: pTotal >= pTarget ? "#059669" : "#2563EB",
-        borderRadius: 4,
-        width: "".concat(Math.min(100, pTotal / pTarget * 100), "%"),
-        transition: "width 0.3s"
-      }
-    })), /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 9,
-        color: "#555",
-        width: 28,
-        textAlign: "left"
-      }
-    }, Math.round(pTotal / pTarget * 100), "%")), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        marginBottom: 14
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 9,
-        color: "#333",
-        width: 40,
-        textAlign: "right"
-      }
-    }, "calories"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1,
-        height: 4,
-        background: "#1A1A1A",
-        borderRadius: 4
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        height: 4,
-        background: kcalTotal >= kcalTarget ? "#059669" : "#D97706",
-        borderRadius: 4,
-        width: "".concat(Math.min(100, kcalTotal / kcalTarget * 100), "%"),
-        transition: "width 0.3s"
-      }
-    })), /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 9,
-        color: "#555",
-        width: 28,
-        textAlign: "left"
-      }
-    }, Math.round(kcalTotal / kcalTarget * 100), "%")), /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginBottom: 6
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 9,
-        color: "#333",
-        textTransform: "uppercase",
-        letterSpacing: "0.1em",
-        marginBottom: 6
-      }
-    }, "Meals"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        gap: 5,
-        flexWrap: "wrap",
-        marginBottom: 8
-      }
-    }, MEALS.filter(function (m) {
-      return m.cat === "meal";
-    }).map(function (m) {
-      return /*#__PURE__*/React.createElement("button", {
-        key: m.name,
-        onClick: function onClick() {
-          return addP(m.name, m.p, m.kcal);
-        },
-        style: {
-          background: "#141414",
-          border: "1px solid #1E1E1E",
-          borderRadius: 6,
-          color: "#777",
-          cursor: "pointer",
-          fontSize: 10,
-          padding: "6px 9px",
-          textAlign: "left"
-        }
-      }, /*#__PURE__*/React.createElement("div", null, m.name), /*#__PURE__*/React.createElement("div", {
-        style: {
-          marginTop: 2
-        }
-      }, /*#__PURE__*/React.createElement("span", {
-        style: {
-          color: "#2563EB",
-          fontWeight: 600
-        }
-      }, "+", m.p, "g"), /*#__PURE__*/React.createElement("span", {
-        style: {
-          color: "#D97706",
-          marginLeft: 5
-        }
-      }, "+", m.kcal, "kcal")));
-    })), /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 9,
-        color: "#333",
-        textTransform: "uppercase",
-        letterSpacing: "0.1em",
-        marginBottom: 6
-      }
-    }, "Snacks"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        gap: 5,
-        flexWrap: "wrap",
-        marginBottom: 10
-      }
-    }, MEALS.filter(function (m) {
-      return m.cat === "snack";
-    }).map(function (m) {
-      return /*#__PURE__*/React.createElement("button", {
-        key: m.name,
-        onClick: function onClick() {
-          return addP(m.name, m.p, m.kcal);
-        },
-        style: {
-          background: "#141414",
-          border: "1px solid #1E1E1E",
-          borderRadius: 6,
-          color: "#777",
-          cursor: "pointer",
-          fontSize: 10,
-          padding: "6px 9px",
-          textAlign: "left"
-        }
-      }, /*#__PURE__*/React.createElement("div", null, m.name), /*#__PURE__*/React.createElement("div", {
-        style: {
-          marginTop: 2
-        }
-      }, /*#__PURE__*/React.createElement("span", {
-        style: {
-          color: "#2563EB",
-          fontWeight: 600
-        }
-      }, "+", m.p, "g"), /*#__PURE__*/React.createElement("span", {
-        style: {
-          color: "#D97706",
-          marginLeft: 5
-        }
-      }, "+", m.kcal, "kcal")));
-    }))), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        gap: 6,
-        marginBottom: 10
-      }
-    }, /*#__PURE__*/React.createElement("input", {
-      placeholder: "Custom food",
-      value: cn,
-      onChange: function onChange(e) {
-        return setCn(e.target.value);
-      },
-      style: _objectSpread(_objectSpread({}, S.inp), {}, {
-        flex: 2,
-        fontSize: 12
-      })
-    }), /*#__PURE__*/React.createElement("input", {
-      placeholder: "pro g",
-      type: "number",
-      value: cg,
-      onChange: function onChange(e) {
-        return setCg(e.target.value);
-      },
-      style: _objectSpread(_objectSpread({}, S.inp), {}, {
-        flex: 1,
-        fontSize: 12
-      })
-    }), /*#__PURE__*/React.createElement("input", {
-      placeholder: "kcal",
-      type: "number",
-      value: ck,
-      onChange: function onChange(e) {
-        return setCk(e.target.value);
-      },
-      style: _objectSpread(_objectSpread({}, S.inp), {}, {
-        flex: 1,
-        fontSize: 12
-      })
-    }), /*#__PURE__*/React.createElement("button", {
+    }, s.label));
+  })))), tab === "habits" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "16px 16px 8px",
+      borderBottom: "1px solid #1a1a1a"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: lbl
+  }, "Habits and Nutrition"), /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontSize: 20,
+      fontWeight: 700,
+      margin: "4px 0 0"
+    }
+  }, "Today")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "12px 16px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: card
+  }, /*#__PURE__*/React.createElement("div", {
+    style: Object.assign({}, row, {
+      marginBottom: 8
+    })
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      fontWeight: 600
+    }
+  }, "Habits"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      color: "#555"
+    }
+  }, hDone, "/", allH.length)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#1a1a1a",
+      borderRadius: 4,
+      height: 6
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: hDone === allH.length ? "#059669" : "#3B82F6",
+      borderRadius: 4,
+      height: 6,
+      width: Math.round(hDone / allH.length * 100) + "%",
+      transition: "width 0.3s"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 10
+    }
+  }, allH.map(function (h) {
+    return /*#__PURE__*/React.createElement("div", {
+      key: h.id,
+      style: Object.assign({}, row, {
+        padding: "6px 0",
+        borderBottom: "1px solid #111",
+        cursor: "pointer"
+      }),
       onClick: function onClick() {
-        return addP(cn || "Custom", cg, ck, function () {
-          setCn("");
-          setCg("");
-          setCk("");
-        });
-      },
-      style: S.btn("#2563EB")
-    }, "+")), pLog.length > 0 && pLog.map(function (e, i) {
-      return /*#__PURE__*/React.createElement("div", {
-        key: i,
-        style: {
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "5px 0",
-          borderBottom: "1px solid #111"
-        }
-      }, /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 12,
-          color: "#555"
-        }
-      }, e.name), /*#__PURE__*/React.createElement("div", {
-        style: {
-          display: "flex",
-          alignItems: "center",
-          gap: 8
-        }
-      }, /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 11,
-          color: "#2563EB",
-          fontWeight: 600
-        }
-      }, "+", e.amount, "g"), e.kcal > 0 && /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 11,
-          color: "#D97706"
-        }
-      }, "+", e.kcal), /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 10,
-          color: "#333"
-        }
-      }, e.time), /*#__PURE__*/React.createElement("button", {
-        onClick: function onClick() {
-          return removeP(i);
-        },
-        style: {
-          background: "none",
-          border: "none",
-          color: "#444",
-          cursor: "pointer",
-          fontSize: 16,
-          padding: "0 2px"
-        }
-      }, "\xD7")));
-    }))));
-  }
-  function TrainingTab() {
-    var _SCHEDULE$trainDay;
-    var prog = PROGRAM[trainDay];
-    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-      style: S.hdr
-    }, /*#__PURE__*/React.createElement("span", {
-      style: S.lbl
-    }, "Progressive Overload"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
-      }
-    }, /*#__PURE__*/React.createElement("h1", {
-      style: {
-        fontSize: 20,
-        fontWeight: 700,
-        margin: 0
-      }
-    }, "Training"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        alignItems: "center",
-        gap: 6
+        toggle(h.id);
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 11,
-        color: "#444"
+        fontSize: 13,
+        color: habits[h.id] ? "#E0DDD6" : "#555"
       }
-    }, "Week"), /*#__PURE__*/React.createElement("button", {
+    }, h.icon, " ", h.label), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 16
+      }
+    }, habits[h.id] ? "✅" : "⬜"));
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: card
+  }, /*#__PURE__*/React.createElement("div", {
+    style: Object.assign({}, row, {
+      marginBottom: 6
+    })
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      fontWeight: 600
+    }
+  }, "Protein"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      fontWeight: 700,
+      color: pTotal >= pTarget ? "#059669" : "#D97706"
+    }
+  }, pTotal, "g / ", pTarget, "g")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#1a1a1a",
+      borderRadius: 4,
+      height: 6,
+      marginBottom: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: pTotal >= pTarget ? "#059669" : "#3B82F6",
+      borderRadius: 4,
+      height: 6,
+      width: Math.min(100, pTotal / pTarget * 100) + "%",
+      transition: "width 0.3s"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: Object.assign({}, row, {
+      marginBottom: 6
+    })
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      fontWeight: 600
+    }
+  }, "Calories"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      fontWeight: 700,
+      color: kcalTotal >= kcalTarget ? "#059669" : kcalTotal > 1500 ? "#D97706" : "#E0DDD6"
+    }
+  }, kcalTotal, " / ", kcalTarget, " kcal")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#1a1a1a",
+      borderRadius: 4,
+      height: 6
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: kcalTotal >= kcalTarget ? "#059669" : "#D97706",
+      borderRadius: 4,
+      height: 6,
+      width: Math.min(100, kcalTotal / kcalTarget * 100) + "%",
+      transition: "width 0.3s"
+    }
+  }))), /*#__PURE__*/React.createElement("div", {
+    style: card
+  }, /*#__PURE__*/React.createElement("div", {
+    style: Object.assign({}, lbl, {
+      marginBottom: 10
+    })
+  }, "Meals"), MEALS.filter(function (m) {
+    return m.cat === "meal";
+  }).map(function (m, i) {
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: Object.assign({}, row, {
+        padding: "7px 0",
+        borderBottom: "1px solid #151515",
+        cursor: "pointer"
+      }),
       onClick: function onClick() {
-        return setTrainWk(function (w) {
-          return Math.max(1, w - 1);
-        });
-      },
-      style: {
-        background: "#1A1A1A",
-        border: "1px solid #222",
-        borderRadius: 6,
-        color: "#AAA",
-        cursor: "pointer",
-        width: 26,
-        height: 26,
-        fontSize: 14
-      }
-    }, "\u2212"), /*#__PURE__*/React.createElement("span", {
-      style: {
-        fontSize: 14,
-        fontWeight: 700,
-        minWidth: 20,
-        textAlign: "center"
-      }
-    }, trainWk), /*#__PURE__*/React.createElement("button", {
-      onClick: function onClick() {
-        return setTrainWk(function (w) {
-          return w + 1;
-        });
-      },
-      style: {
-        background: "#1A1A1A",
-        border: "1px solid #222",
-        borderRadius: 6,
-        color: "#AAA",
-        cursor: "pointer",
-        width: 26,
-        height: 26,
-        fontSize: 14
-      }
-    }, "+"))), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        gap: 5,
-        marginTop: 12,
-        overflowX: "auto",
-        paddingBottom: 4
-      }
-    }, GYM_DAYS.map(function (d) {
-      return /*#__PURE__*/React.createElement("button", {
-        key: d,
-        onClick: function onClick() {
-          return setTrainDay(d);
-        },
-        style: S.pill(DC[d], trainDay === d)
-      }, d);
-    }))), /*#__PURE__*/React.createElement("div", {
-      style: S.sec
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginBottom: 10
+        addP(m.name, m.p, m.kcal);
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 14,
-        fontWeight: 700,
-        color: tc
+        fontSize: 13,
+        flex: 1
       }
-    }, (_SCHEDULE$trainDay = SCHEDULE[trainDay]) === null || _SCHEDULE$trainDay === void 0 ? void 0 : _SCHEDULE$trainDay.label), /*#__PURE__*/React.createElement("span", {
+    }, m.name), /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 11,
         color: "#555",
         marginLeft: 8
       }
-    }, prog === null || prog === void 0 ? void 0 : prog.tag, " \xB7 ", prog === null || prog === void 0 ? void 0 : prog.duration)), prog === null || prog === void 0 ? void 0 : prog.exercises.map(function (ex) {
-      var mob = ex.category === "Mobility";
-      var carry = ex.repRange === "40m";
-      return /*#__PURE__*/React.createElement("div", {
-        key: ex.id,
-        style: _objectSpread(_objectSpread({}, S.card), {}, {
-          padding: "12px"
-        })
-      }, /*#__PURE__*/React.createElement("div", {
-        style: {
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 10
-        }
-      }, /*#__PURE__*/React.createElement("div", {
-        style: {
-          display: "flex",
-          alignItems: "center",
-          gap: 8
-        }
-      }, /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 9,
-          fontWeight: 700,
-          background: CC[ex.category] + "22",
-          color: CC[ex.category],
-          padding: "2px 7px",
-          borderRadius: 4
-        }
-      }, ex.category), /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 13,
-          fontWeight: 600,
-          color: "#DDD"
-        }
-      }, ex.name)), /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 11,
-          color: "#444"
-        }
-      }, ex.repRange)), mob ? /*#__PURE__*/React.createElement(SI, {
-        sk: tKey(trainWk, trainDay, ex.id, 0, "note"),
-        placeholder: "Notes",
-        style: S.inp
-      }) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-        style: {
-          display: "grid",
-          gridTemplateColumns: "22px 1fr 1fr 1fr",
-          gap: 5,
-          marginBottom: 5
-        }
-      }, /*#__PURE__*/React.createElement("span", null), /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 9,
-          color: "#333",
-          textAlign: "center",
-          textTransform: "uppercase"
-        }
-      }, "kg"), /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 9,
-          color: "#333",
-          textAlign: "center",
-          textTransform: "uppercase"
-        }
-      }, carry ? "m" : "reps"), /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 9,
-          color: "#333",
-          textAlign: "center",
-          textTransform: "uppercase"
-        }
-      }, "prev")), Array.from({
-        length: ex.sets
-      }).map(function (_, i) {
-        var pk = getPrev(ex.id, i, "kg");
-        var pr = getPrev(ex.id, i, "reps");
-        var ps = pk || pr ? "".concat(pk || "—", "\xD7").concat(pr || "—") : "—";
-        return /*#__PURE__*/React.createElement("div", {
-          key: i,
-          style: {
-            display: "grid",
-            gridTemplateColumns: "22px 1fr 1fr 1fr",
-            gap: 5,
-            marginBottom: 4,
-            alignItems: "center"
-          }
-        }, /*#__PURE__*/React.createElement("span", {
-          style: {
-            fontSize: 10,
-            color: "#333",
-            fontWeight: 600
-          }
-        }, "S", i + 1), /*#__PURE__*/React.createElement(SI, {
-          sk: tKey(trainWk, trainDay, ex.id, i, "kg"),
-          placeholder: "kg",
-          type: "number",
-          style: S.num
-        }), /*#__PURE__*/React.createElement(SI, {
-          sk: tKey(trainWk, trainDay, ex.id, i, "reps"),
-          placeholder: carry ? "m" : "reps",
-          type: "number",
-          style: S.num
-        }), /*#__PURE__*/React.createElement("span", {
-          style: {
-            fontSize: 10,
-            color: "#2A2A2A",
-            textAlign: "center"
-          }
-        }, ps));
-      }), /*#__PURE__*/React.createElement(SI, {
-        sk: tKey(trainWk, trainDay, ex.id, 99, "note"),
-        placeholder: "Note (optional)",
-        style: _objectSpread(_objectSpread({}, S.inp), {}, {
-          marginTop: 6,
-          fontSize: 11
-        })
-      })));
-    }), /*#__PURE__*/React.createElement("button", {
-      onClick: saveTrain,
-      style: _objectSpread(_objectSpread({}, S.btn(tc)), {}, {
-        width: "100%",
-        padding: 14,
-        fontSize: 14
-      })
-    }, saved ? "✓ Saved" : "Save Session")));
-  }
-  function InaTab() {
-    var dk = "ina_".concat(today());
-    var _useState19 = useState(load("".concat(dk, "_dms"), "")),
-      _useState20 = _slicedToArray(_useState19, 2),
-      dmsVal = _useState20[0],
-      setDmsVal = _useState20[1];
-    var dmTarget = 50;
-    var dmsNum = parseInt(dmsVal) || 0;
-    var pct = Math.min(100, Math.round(dmsNum / dmTarget * 100));
-    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-      style: S.hdr
-    }, /*#__PURE__*/React.createElement("span", {
-      style: S.lbl
-    }, "INA Creatives"), /*#__PURE__*/React.createElement("h1", {
+    }, m.p, "g"), /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 20,
-        fontWeight: 700,
-        margin: 0
-      }
-    }, "Outreach"), /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginTop: 6,
         fontSize: 11,
-        color: "#444"
+        color: "#777",
+        marginLeft: 6,
+        width: 55,
+        textAlign: "right"
       }
-    }, new Date().toLocaleDateString("en-GB", {
-      weekday: "long",
-      day: "numeric",
-      month: "short"
-    }))), /*#__PURE__*/React.createElement("div", {
-      style: S.sec
-    }, /*#__PURE__*/React.createElement("div", {
-      style: S.card
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 8
+    }, m.kcal, "kcal"));
+  }), /*#__PURE__*/React.createElement("div", {
+    style: Object.assign({}, lbl, {
+      marginTop: 12,
+      marginBottom: 10
+    })
+  }, "Snacks"), MEALS.filter(function (m) {
+    return m.cat === "snack";
+  }).map(function (m, i) {
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: Object.assign({}, row, {
+        padding: "7px 0",
+        borderBottom: "1px solid #151515",
+        cursor: "pointer"
+      }),
+      onClick: function onClick() {
+        addP(m.name, m.p, m.kcal);
       }
     }, /*#__PURE__*/React.createElement("span", {
-      style: S.lbl
-    }, "New DMs today"), /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 20,
-        fontWeight: 700,
-        color: pct >= 100 ? "#059669" : "#E0DDD6"
+        fontSize: 13,
+        flex: 1
       }
-    }, dmsNum, /*#__PURE__*/React.createElement("span", {
+    }, m.name), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 11,
+        color: "#555",
+        marginLeft: 8
+      }
+    }, m.p, "g"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 11,
+        color: "#777",
+        marginLeft: 6,
+        width: 55,
+        textAlign: "right"
+      }
+    }, m.kcal, "kcal"));
+  })), /*#__PURE__*/React.createElement(CustomEntry, {
+    addP: addP
+  }), pLog.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: card
+  }, /*#__PURE__*/React.createElement("div", {
+    style: Object.assign({}, row, {
+      marginBottom: 8
+    })
+  }, /*#__PURE__*/React.createElement("span", {
+    style: lbl
+  }, "Log"), /*#__PURE__*/React.createElement("button", {
+    style: {
+      background: "none",
+      border: "none",
+      color: "#E74C3C",
+      fontSize: 11,
+      cursor: "pointer"
+    },
+    onClick: function onClick() {
+      setPLog([]);
+    }
+  }, "Clear")), pLog.slice().reverse().map(function (e, i) {
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: Object.assign({}, row, {
+        padding: "5px 0",
+        borderBottom: "1px solid #111"
+      })
+    }, /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 12,
-        color: "#444"
+        flex: 1,
+        color: "#888"
       }
-    }, "/", dmTarget))), /*#__PURE__*/React.createElement("div", {
+    }, e.name), /*#__PURE__*/React.createElement("span", {
       style: {
-        height: 4,
-        background: "#1A1A1A",
-        borderRadius: 4,
-        marginBottom: 12
+        fontSize: 12,
+        color: "#3B82F6",
+        marginLeft: 8
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, "+", e.amount, "g"), e.kcal > 0 && /*#__PURE__*/React.createElement("span", {
       style: {
-        height: 4,
-        background: pct >= 100 ? "#059669" : "#7C3AED",
-        borderRadius: 4,
-        width: "".concat(pct, "%"),
-        transition: "width 0.3s"
+        fontSize: 12,
+        color: "#D97706",
+        marginLeft: 6
       }
-    })), /*#__PURE__*/React.createElement("input", {
-      type: "number",
-      placeholder: "DMs sent today",
-      defaultValue: load("".concat(dk, "_dms"), ""),
-      onChange: function onChange(e) {
-        store("".concat(dk, "_dms"), e.target.value);
-        setDmsVal(e.target.value);
-      },
-      style: S.inp
-    })), /*#__PURE__*/React.createElement("div", {
+    }, "+", e.kcal, "kcal"), /*#__PURE__*/React.createElement("span", {
       style: {
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: 10,
-        marginBottom: 12
-      }
-    }, [{
-      k: "".concat(dk, "_followups"),
-      l: "Follow-ups sent"
-    }, {
-      k: "".concat(dk, "_calls"),
-      l: "Calls booked"
-    }, {
-      k: "".concat(dk, "_emails_sent"),
-      l: "Emails sent"
-    }, {
-      k: "".concat(dk, "_email_replies"),
-      l: "Email replies"
-    }].map(function (m) {
-      return /*#__PURE__*/React.createElement("div", {
-        key: m.k,
-        style: S.card
-      }, /*#__PURE__*/React.createElement("span", {
-        style: S.lbl
-      }, m.l), /*#__PURE__*/React.createElement(SI, {
-        sk: m.k,
-        placeholder: "0",
-        type: "number",
-        style: _objectSpread(_objectSpread({}, S.num), {}, {
-          fontSize: 22,
-          fontWeight: 700,
-          padding: "8px"
-        })
-      }));
-    })), /*#__PURE__*/React.createElement("div", {
-      style: S.card
-    }, /*#__PURE__*/React.createElement("span", {
-      style: S.lbl
-    }, "Session note / priorities"), /*#__PURE__*/React.createElement(SI, {
-      sk: "".concat(dk, "_note"),
-      placeholder: "Focus tonight? Pipeline updates?",
-      style: _objectSpread(_objectSpread({}, S.inp), {}, {
-        minHeight: 80
-      }),
-      multi: true
-    })), /*#__PURE__*/React.createElement("div", {
-      style: _objectSpread(_objectSpread({}, S.card), {}, {
-        background: "#0A0A0A"
-      })
-    }, /*#__PURE__*/React.createElement("span", {
-      style: S.lbl
-    }, "Weekly targets"), [{
-      l: "DMs/week",
-      v: "300 (50/day)",
-      c: "#7C3AED"
-    }, {
-      l: "Calls booked/week",
-      v: "3–5 minimum",
-      c: "#059669"
-    }, {
-      l: "Email sends/week",
-      v: "200 (40/day)",
-      c: "#2563EB"
-    }, {
-      l: "Bridge → Call",
-      v: "Primary conversion focus",
-      c: "#D97706"
-    }].map(function (t, i) {
-      return /*#__PURE__*/React.createElement("div", {
-        key: i,
-        style: {
-          display: "flex",
-          justifyContent: "space-between",
-          padding: "7px 0",
-          borderBottom: i < 3 ? "1px solid #111" : "none"
-        }
-      }, /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 12,
-          color: "#555"
-        }
-      }, t.l), /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: 12,
-          color: t.c,
-          fontWeight: 600
-        }
-      }, t.v));
-    }))));
-  }
-  function FinanceTab() {
-    return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-      style: S.hdr
-    }, /*#__PURE__*/React.createElement("span", {
-      style: S.lbl
-    }, "Coming soon"), /*#__PURE__*/React.createElement("h1", {
-      style: {
-        fontSize: 20,
-        fontWeight: 700,
-        margin: 0
-      }
-    }, "Finance")), /*#__PURE__*/React.createElement("div", {
-      style: _objectSpread(_objectSpread({}, S.sec), {}, {
-        textAlign: "center",
-        paddingTop: 60
-      })
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: 40,
-        marginBottom: 16
-      }
-    }, "\uD83D\uDCB7"), /*#__PURE__*/React.createElement("p", {
-      style: {
+        fontSize: 11,
         color: "#444",
-        fontSize: 14,
-        lineHeight: 1.8
+        marginLeft: 8
       }
-    }, "Finance tracker coming soon.", /*#__PURE__*/React.createElement("br", null), "Weekly budget, Aldi shop,", /*#__PURE__*/React.createElement("br", null), "savings + INA revenue.")));
-  }
-  var TABS = [{
-    id: "today",
-    icon: "◈",
-    label: "Today",
-    color: dc
+    }, e.time));
+  })))), tab === "training" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "16px 16px 8px",
+      borderBottom: "1px solid #1a1a1a"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: lbl
+  }, "Training"), /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontSize: 20,
+      fontWeight: 700,
+      margin: "4px 0 0"
+    }
+  }, "Weekly Log")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "12px 16px"
+    }
+  }, [{
+    id: "MON",
+    label: "Push (Chest/Shoulders/Triceps)"
   }, {
-    id: "habits",
-    icon: "✓",
-    label: "Habits",
-    color: "#059669"
+    id: "TUE",
+    label: "Pull (Back/Biceps)"
   }, {
-    id: "training",
-    icon: "⬡",
-    label: "Train",
-    color: tc
+    id: "WED",
+    label: "Legs (Quads/Hams/Calves)"
   }, {
-    id: "ina",
-    icon: "◎",
-    label: "INA",
-    color: "#7C3AED"
+    id: "THU",
+    label: "Push variation"
   }, {
-    id: "finance",
-    icon: "◇",
-    label: "Finance",
-    color: "#D97706"
-  }];
-  return /*#__PURE__*/React.createElement("div", {
-    style: S.wrap
-  }, tab === "today" && /*#__PURE__*/React.createElement(TodayTab, null), tab === "habits" && /*#__PURE__*/React.createElement(HabitsTab, null), tab === "training" && /*#__PURE__*/React.createElement(TrainingTab, null), tab === "ina" && /*#__PURE__*/React.createElement(InaTab, null), tab === "finance" && /*#__PURE__*/React.createElement(FinanceTab, null), /*#__PURE__*/React.createElement("div", {
-    style: S.bar
+    id: "FRI",
+    label: "Pull variation"
+  }, {
+    id: "SAT",
+    label: "Rest / Active recovery"
+  }, {
+    id: "SUN",
+    label: "Rest / Review"
+  }].map(function (d) {
+    return /*#__PURE__*/React.createElement("div", {
+      key: d.id,
+      style: Object.assign({}, card, row, {
+        cursor: "pointer"
+      }),
+      onClick: function onClick() {
+        setTrainWk(function (w) {
+          return Object.assign({}, w, _defineProperty({}, d.id, !w[d.id]));
+        });
+      }
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 13,
+        fontWeight: 600
+      }
+    }, d.id), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 12,
+        color: "#555",
+        marginTop: 2
+      }
+    }, d.label)), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 20
+      }
+    }, trainWk[d.id] ? "✅" : "⬜"));
+  }))), tab === "ina" && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "16px 16px 8px",
+      borderBottom: "1px solid #1a1a1a"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: lbl
+  }, "INA Creatives"), /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontSize: 20,
+      fontWeight: 700,
+      margin: "4px 0 0"
+    }
+  }, "Outreach")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "12px 16px"
+    }
+  }, /*#__PURE__*/React.createElement(OutreachCard, {
+    title: "DM Outreach",
+    data: dm,
+    setData: setDm,
+    color: "#EF4444",
+    target: 50
+  }), /*#__PURE__*/React.createElement(OutreachCard, {
+    title: "Email Outreach",
+    data: em,
+    setData: setEm,
+    color: "#8B5CF6",
+    target: 40
+  }), /*#__PURE__*/React.createElement("div", {
+    style: card
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: "#444",
+      textAlign: "center"
+    }
+  }, "Reply rate \u2014 DM: ", dm.sent ? Math.round(dm.replies / dm.sent * 100) : 0, "% / Email: ", em.sent ? Math.round(em.replies / em.sent * 100) : 0, "%")))), tab === "finance" && /*#__PURE__*/React.createElement(FinanceTab, {
+    tx: tx,
+    setTx: setTx
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      bottom: 0,
+      left: 0,
+      right: 0,
+      background: "#0d0d0d",
+      borderTop: "1px solid #1a1a1a",
+      display: "flex",
+      paddingBottom: "env(safe-area-inset-bottom)"
+    }
   }, TABS.map(function (t) {
     return /*#__PURE__*/React.createElement("button", {
       key: t.id,
       onClick: function onClick() {
-        return setTab(t.id);
+        setTab(t.id);
       },
-      style: S.tbtn(tab === t.id, t.color)
+      style: tbtn(tab === t.id, t.color)
     }, /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 18
@@ -2126,15 +898,370 @@ function App() {
     }, t.label));
   })));
 }
+function CustomEntry(props) {
+  var addP = props.addP;
+  var _useState15 = useState(""),
+    _useState16 = _slicedToArray(_useState15, 2),
+    cn = _useState16[0],
+    setCn = _useState16[1];
+  var _useState17 = useState(""),
+    _useState18 = _slicedToArray(_useState17, 2),
+    cg = _useState18[0],
+    setCg = _useState18[1];
+  var _useState19 = useState(""),
+    _useState20 = _slicedToArray(_useState19, 2),
+    ck = _useState20[0],
+    setCk = _useState20[1];
+  return /*#__PURE__*/React.createElement("div", {
+    style: card
+  }, /*#__PURE__*/React.createElement("div", {
+    style: Object.assign({}, lbl, {
+      marginBottom: 10
+    })
+  }, "Custom entry"), /*#__PURE__*/React.createElement("input", {
+    style: Object.assign({}, inp, {
+      marginBottom: 6
+    }),
+    placeholder: "Name",
+    value: cn,
+    onChange: function onChange(e) {
+      setCn(e.target.value);
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 6,
+      marginBottom: 8
+    }
+  }, /*#__PURE__*/React.createElement("input", {
+    style: inp,
+    type: "number",
+    placeholder: "Protein (g)",
+    value: cg,
+    onChange: function onChange(e) {
+      setCg(e.target.value);
+    }
+  }), /*#__PURE__*/React.createElement("input", {
+    style: inp,
+    type: "number",
+    placeholder: "Calories",
+    value: ck,
+    onChange: function onChange(e) {
+      setCk(e.target.value);
+    }
+  })), /*#__PURE__*/React.createElement("button", {
+    style: abtn("#3B82F6"),
+    onClick: function onClick() {
+      addP(cn || "Custom", cg, ck);
+      setCn("");
+      setCg("");
+      setCk("");
+    }
+  }, "Add"));
+}
+function OutreachCard(props) {
+  var title = props.title,
+    data = props.data,
+    setData = props.setData,
+    color = props.color,
+    target = props.target;
+  function dec(field) {
+    setData(function (d) {
+      var n = Object.assign({}, d);
+      n[field] = Math.max(0, n[field] - 1);
+      return n;
+    });
+  }
+  function inc(field) {
+    setData(function (d) {
+      var n = Object.assign({}, d);
+      n[field] = n[field] + 1;
+      return n;
+    });
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    style: card
+  }, /*#__PURE__*/React.createElement("div", {
+    style: Object.assign({}, row, {
+      marginBottom: 10
+    })
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      fontWeight: 700
+    }
+  }, title), /*#__PURE__*/React.createElement("span", {
+    style: atag(color)
+  }, data.sent, "/", target, " sent")), [["sent", "Sent (target: " + target + ")"], ["replies", "Replies"], ["calls", "Calls Booked"]].map(function (pair) {
+    var field = pair[0];
+    var label = pair[1];
+    return /*#__PURE__*/React.createElement("div", {
+      key: field,
+      style: Object.assign({}, row, {
+        padding: "6px 0",
+        borderBottom: "1px solid #111"
+      })
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 12,
+        color: "#888"
+      }
+    }, label), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 8
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      style: {
+        background: "#1a1a1a",
+        border: "none",
+        color: "#E0DDD6",
+        borderRadius: 6,
+        width: 28,
+        height: 28,
+        fontSize: 16,
+        cursor: "pointer"
+      },
+      onClick: function onClick() {
+        dec(field);
+      }
+    }, "-"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 14,
+        fontWeight: 700,
+        minWidth: 24,
+        textAlign: "center"
+      }
+    }, data[field]), /*#__PURE__*/React.createElement("button", {
+      style: {
+        background: color + "33",
+        border: "none",
+        color: color,
+        borderRadius: 6,
+        width: 28,
+        height: 28,
+        fontSize: 16,
+        cursor: "pointer"
+      },
+      onClick: function onClick() {
+        inc(field);
+      }
+    }, "+")));
+  }));
+}
+function FinanceTab(props) {
+  var tx = props.tx,
+    setTx = props.setTx;
+  var _useState21 = useState(""),
+    _useState22 = _slicedToArray(_useState21, 2),
+    desc = _useState22[0],
+    setDesc = _useState22[1];
+  var _useState23 = useState(""),
+    _useState24 = _slicedToArray(_useState23, 2),
+    amt = _useState24[0],
+    setAmt = _useState24[1];
+  var _useState25 = useState("expense"),
+    _useState26 = _slicedToArray(_useState25, 2),
+    type = _useState26[0],
+    setType = _useState26[1];
+  var income = tx.filter(function (t) {
+    return t.type === "income";
+  }).reduce(function (s, t) {
+    return s + t.amt;
+  }, 0);
+  var expenses = tx.filter(function (t) {
+    return t.type === "expense";
+  }).reduce(function (s, t) {
+    return s + t.amt;
+  }, 0);
+  var net = income - expenses;
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "16px 16px 8px",
+      borderBottom: "1px solid #1a1a1a"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: lbl
+  }, "Finance"), /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontSize: 20,
+      fontWeight: 700,
+      margin: "4px 0 0"
+    }
+  }, "Money")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "12px 16px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 8,
+      marginBottom: 8
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: Object.assign({}, card, {
+      textAlign: "center",
+      marginBottom: 0
+    })
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 18,
+      fontWeight: 700,
+      color: "#059669"
+    }
+  }, "\xA3", income), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: "#444",
+      marginTop: 2
+    }
+  }, "Income")), /*#__PURE__*/React.createElement("div", {
+    style: Object.assign({}, card, {
+      textAlign: "center",
+      marginBottom: 0
+    })
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 18,
+      fontWeight: 700,
+      color: "#EF4444"
+    }
+  }, "\xA3", expenses), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: "#444",
+      marginTop: 2
+    }
+  }, "Expenses"))), /*#__PURE__*/React.createElement("div", {
+    style: Object.assign({}, card, {
+      textAlign: "center",
+      marginBottom: 8
+    })
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 18,
+      fontWeight: 700,
+      color: net >= 0 ? "#059669" : "#EF4444"
+    }
+  }, "\xA3", net), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 10,
+      color: "#444",
+      marginTop: 2
+    }
+  }, "Net")), /*#__PURE__*/React.createElement("div", {
+    style: card
+  }, /*#__PURE__*/React.createElement("div", {
+    style: Object.assign({}, lbl, {
+      marginBottom: 8
+    })
+  }, "Add Transaction"), /*#__PURE__*/React.createElement("input", {
+    style: Object.assign({}, inp, {
+      marginBottom: 6
+    }),
+    placeholder: "Description",
+    value: desc,
+    onChange: function onChange(e) {
+      setDesc(e.target.value);
+    }
+  }), /*#__PURE__*/React.createElement("input", {
+    style: Object.assign({}, inp, {
+      marginBottom: 6
+    }),
+    type: "number",
+    placeholder: "Amount (\xA3)",
+    value: amt,
+    onChange: function onChange(e) {
+      setAmt(e.target.value);
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 6,
+      marginBottom: 8
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    style: Object.assign({}, pill("#059669", type === "income"), {
+      flex: 1
+    }),
+    onClick: function onClick() {
+      setType("income");
+    }
+  }, "income"), /*#__PURE__*/React.createElement("button", {
+    style: Object.assign({}, pill("#EF4444", type === "expense"), {
+      flex: 1
+    }),
+    onClick: function onClick() {
+      setType("expense");
+    }
+  }, "expense")), /*#__PURE__*/React.createElement("button", {
+    style: abtn(type === "income" ? "#059669" : "#EF4444"),
+    onClick: function onClick() {
+      if (!amt || isNaN(amt)) return;
+      setTx(function (t) {
+        return t.concat([{
+          desc: desc || "—",
+          amt: parseFloat(amt),
+          type: type,
+          date: new Date().toLocaleDateString("en-GB")
+        }]);
+      });
+      setDesc("");
+      setAmt("");
+    }
+  }, "Add")), tx.length > 0 && /*#__PURE__*/React.createElement("div", {
+    style: card
+  }, /*#__PURE__*/React.createElement("div", {
+    style: Object.assign({}, row, {
+      marginBottom: 8
+    })
+  }, /*#__PURE__*/React.createElement("span", {
+    style: lbl
+  }, "Transactions"), /*#__PURE__*/React.createElement("button", {
+    style: {
+      background: "none",
+      border: "none",
+      color: "#E74C3C",
+      fontSize: 11,
+      cursor: "pointer"
+    },
+    onClick: function onClick() {
+      setTx([]);
+    }
+  }, "Clear")), tx.slice().reverse().map(function (t, i) {
+    return /*#__PURE__*/React.createElement("div", {
+      key: i,
+      style: Object.assign({}, row, {
+        padding: "5px 0",
+        borderBottom: "1px solid #111"
+      })
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 12,
+        flex: 1,
+        color: "#888"
+      }
+    }, t.desc), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 12,
+        fontWeight: 600,
+        color: t.type === "income" ? "#059669" : "#EF4444"
+      }
+    }, t.type === "income" ? "+" : "-", "\xA3", t.amt));
+  }))));
+}
 ReactDOM.createRoot(document.getElementById("root")).render(/*#__PURE__*/React.createElement(App, null));
 
 </script>
 <script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
     navigator.serviceWorker.register('./sw.js')
-      .then(function(reg) { console.log('SW registered, scope:', reg.scope); })
-      .catch(function(err) { console.warn('SW registration failed:', err); });
+      .then(function(r){console.log('SW ok',r.scope);})
+      .catch(function(e){console.warn('SW fail',e);});
   });
 }
 </script>
