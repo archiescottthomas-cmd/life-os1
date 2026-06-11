@@ -24,6 +24,8 @@
 <body>
 <div id="root"></div>
 <script>
+"use strict";
+
 function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
 function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
 function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
@@ -33,7 +35,7 @@ function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLim
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t.return && (u = t.return(), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
 function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
@@ -758,7 +760,7 @@ var HABITS = [{
   icon: "✍️"
 }, {
   id: "protein",
-  label: "Protein target hit (155g)",
+  label: "Protein target hit (130g)",
   icon: "🥩"
 }, {
   id: "post_training",
@@ -774,33 +776,52 @@ var WKND_HABITS = [{
   label: "Weekly review done",
   icon: "📊"
 }];
-var PSRC = [{
-  name: "Chicken breast (150g)",
-  p: 45
+var MEALS = [{
+  name: "Breakfast (yogurt + granola)",
+  p: 25,
+  kcal: 450,
+  cat: "meal"
 }, {
-  name: "Greek yoghurt (200g)",
-  p: 20
+  name: "Bolognese + pasta",
+  p: 38,
+  kcal: 650,
+  cat: "meal"
 }, {
-  name: "Eggs (2)",
-  p: 12
+  name: "Nando's chicken + rice + veg",
+  p: 38,
+  kcal: 650,
+  cat: "meal"
+}, {
+  name: "Burger bowl + diced potato",
+  p: 35,
+  kcal: 650,
+  cat: "meal"
+}, {
+  name: "Scrambled eggs (2)",
+  p: 12,
+  kcal: 160,
+  cat: "snack"
+}, {
+  name: "Tuna tin",
+  p: 25,
+  kcal: 120,
+  cat: "snack"
+}, {
+  name: "Greek yogurt pot",
+  p: 15,
+  kcal: 150,
+  cat: "snack"
+}, {
+  name: "Peanut butter on bread",
+  p: 12,
+  kcal: 350,
+  cat: "snack"
 }, {
   name: "Protein shake",
-  p: 25
-}, {
-  name: "Tuna (tin)",
-  p: 30
-}, {
-  name: "Beef mince (150g)",
-  p: 32
-}, {
-  name: "Salmon (150g)",
-  p: 30
-}, {
-  name: "Cottage cheese (200g)",
-  p: 24
+  p: 25,
+  kcal: 150,
+  cat: "snack"
 }];
-
-// Stable input — uses uncontrolled ref, saves on change, no re-render on parent
 function SI(_ref) {
   var sk = _ref.sk,
     placeholder = _ref.placeholder,
@@ -882,13 +903,18 @@ function App() {
   var pTotal = pLog.reduce(function (s, e) {
     return s + e.amount;
   }, 0);
-  var pTarget = 155;
-  function addP(name, amount, cb) {
+  var kcalTotal = pLog.reduce(function (s, e) {
+    return s + (e.kcal || 0);
+  }, 0);
+  var pTarget = 130;
+  var kcalTarget = 2500;
+  function addP(name, amount, kcal, cb) {
     if (!amount || isNaN(amount)) return;
     setPLog(function (p) {
       return [].concat(_toConsumableArray(p), [{
         name: name,
         amount: parseInt(amount),
+        kcal: parseInt(kcal) || 0,
         time: new Date().toLocaleTimeString("en-GB", {
           hour: "2-digit",
           minute: "2-digit"
@@ -1026,8 +1052,6 @@ function App() {
       };
     }
   };
-
-  // TODAY
   function TodayTab() {
     var sc = SCHEDULE[schedDay];
     var now = new Date();
@@ -1088,7 +1112,7 @@ function App() {
     }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: "grid",
-        gridTemplateColumns: "1fr 1fr 1fr",
+        gridTemplateColumns: "1fr 1fr",
         gap: 8,
         marginBottom: 14
       }
@@ -1097,13 +1121,17 @@ function App() {
       value: "".concat(hDone, "/").concat(allH.length),
       color: hDone === allH.length ? "#059669" : "#E0DDD6"
     }, {
-      label: "Protein",
-      value: "".concat(pTotal, "g"),
-      color: pTotal >= pTarget ? "#059669" : pTotal > 80 ? "#D97706" : "#E0DDD6"
-    }, {
       label: "Wake",
       value: (sc === null || sc === void 0 ? void 0 : sc.wake) || "—",
       color: "#E0DDD6"
+    }, {
+      label: "Protein",
+      value: "".concat(pTotal, "g"),
+      color: pTotal >= pTarget ? "#059669" : pTotal > 70 ? "#D97706" : "#E0DDD6"
+    }, {
+      label: "Calories",
+      value: "".concat(kcalTotal),
+      color: kcalTotal >= kcalTarget ? "#059669" : kcalTotal > 1500 ? "#D97706" : "#E0DDD6"
     }].map(function (s, i) {
       return /*#__PURE__*/React.createElement("div", {
         key: i,
@@ -1204,8 +1232,6 @@ function App() {
       }, n));
     }))));
   }
-
-  // HABITS
   function HabitsTab() {
     var _useState13 = useState(""),
       _useState14 = _slicedToArray(_useState13, 2),
@@ -1215,6 +1241,10 @@ function App() {
       _useState16 = _slicedToArray(_useState15, 2),
       cg = _useState16[0],
       setCg = _useState16[1];
+    var _useState17 = useState(""),
+      _useState18 = _slicedToArray(_useState17, 2),
+      ck = _useState18[0],
+      setCk = _useState18[1];
     var isWknd = ["SAT", "SUN"].includes(getDay());
     var allH = isWknd ? [].concat(HABITS, WKND_HABITS) : HABITS;
     var done = allH.filter(function (h) {
@@ -1315,28 +1345,58 @@ function App() {
       style: {
         display: "flex",
         justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 8
+        alignItems: "flex-start",
+        marginBottom: 6
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: S.lbl
-    }, "Protein today"), /*#__PURE__*/React.createElement("span", {
+    }, "Nutrition today"), /*#__PURE__*/React.createElement("div", {
       style: {
-        fontSize: 18,
+        textAlign: "right"
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 15,
         fontWeight: 700,
         color: pTotal >= pTarget ? "#059669" : "#E0DDD6"
       }
-    }, pTotal, /*#__PURE__*/React.createElement("span", {
+    }, pTotal, "g ", /*#__PURE__*/React.createElement("span", {
       style: {
-        fontSize: 11,
+        fontSize: 10,
         color: "#444"
       }
-    }, "/", pTarget, "g"))), /*#__PURE__*/React.createElement("div", {
+    }, "/", pTarget, "g protein")), /*#__PURE__*/React.createElement("div", {
       style: {
+        fontSize: 13,
+        fontWeight: 600,
+        color: kcalTotal >= kcalTarget ? "#059669" : kcalTotal > 1500 ? "#D97706" : "#E0DDD6",
+        marginTop: 2
+      }
+    }, kcalTotal, " ", /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 10,
+        color: "#444"
+      }
+    }, "/", kcalTarget, " kcal")))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        marginBottom: 4
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 9,
+        color: "#333",
+        width: 40,
+        textAlign: "right"
+      }
+    }, "protein"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
         height: 4,
         background: "#1A1A1A",
-        borderRadius: 4,
-        marginBottom: 12
+        borderRadius: 4
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -1346,18 +1406,75 @@ function App() {
         width: "".concat(Math.min(100, pTotal / pTarget * 100), "%"),
         transition: "width 0.3s"
       }
-    })), /*#__PURE__*/React.createElement("div", {
+    })), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 9,
+        color: "#555",
+        width: 28,
+        textAlign: "left"
+      }
+    }, Math.round(pTotal / pTarget * 100), "%")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        marginBottom: 14
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 9,
+        color: "#333",
+        width: 40,
+        textAlign: "right"
+      }
+    }, "calories"), /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        height: 4,
+        background: "#1A1A1A",
+        borderRadius: 4
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: 4,
+        background: kcalTotal >= kcalTarget ? "#059669" : "#D97706",
+        borderRadius: 4,
+        width: "".concat(Math.min(100, kcalTotal / kcalTarget * 100), "%"),
+        transition: "width 0.3s"
+      }
+    })), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: 9,
+        color: "#555",
+        width: 28,
+        textAlign: "left"
+      }
+    }, Math.round(kcalTotal / kcalTarget * 100), "%")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginBottom: 6
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: 9,
+        color: "#333",
+        textTransform: "uppercase",
+        letterSpacing: "0.1em",
+        marginBottom: 6
+      }
+    }, "Meals"), /*#__PURE__*/React.createElement("div", {
       style: {
         display: "flex",
         gap: 5,
         flexWrap: "wrap",
-        marginBottom: 10
+        marginBottom: 8
       }
-    }, PSRC.map(function (s) {
+    }, MEALS.filter(function (m) {
+      return m.cat === "meal";
+    }).map(function (m) {
       return /*#__PURE__*/React.createElement("button", {
-        key: s.name,
+        key: m.name,
         onClick: function onClick() {
-          return addP(s.name, s.p);
+          return addP(m.name, m.p, m.kcal);
         },
         style: {
           background: "#141414",
@@ -1366,18 +1483,76 @@ function App() {
           color: "#777",
           cursor: "pointer",
           fontSize: 10,
-          padding: "5px 8px"
+          padding: "6px 9px",
+          textAlign: "left"
         }
-      }, s.name.split("(")[0].trim(), " ", /*#__PURE__*/React.createElement("span", {
+      }, /*#__PURE__*/React.createElement("div", null, m.name), /*#__PURE__*/React.createElement("div", {
+        style: {
+          marginTop: 2
+        }
+      }, /*#__PURE__*/React.createElement("span", {
         style: {
           color: "#2563EB",
           fontWeight: 600
         }
-      }, "+", s.p, "g"));
+      }, "+", m.p, "g"), /*#__PURE__*/React.createElement("span", {
+        style: {
+          color: "#D97706",
+          marginLeft: 5
+        }
+      }, "+", m.kcal, "kcal")));
     })), /*#__PURE__*/React.createElement("div", {
       style: {
+        fontSize: 9,
+        color: "#333",
+        textTransform: "uppercase",
+        letterSpacing: "0.1em",
+        marginBottom: 6
+      }
+    }, "Snacks"), /*#__PURE__*/React.createElement("div", {
+      style: {
         display: "flex",
-        gap: 8,
+        gap: 5,
+        flexWrap: "wrap",
+        marginBottom: 10
+      }
+    }, MEALS.filter(function (m) {
+      return m.cat === "snack";
+    }).map(function (m) {
+      return /*#__PURE__*/React.createElement("button", {
+        key: m.name,
+        onClick: function onClick() {
+          return addP(m.name, m.p, m.kcal);
+        },
+        style: {
+          background: "#141414",
+          border: "1px solid #1E1E1E",
+          borderRadius: 6,
+          color: "#777",
+          cursor: "pointer",
+          fontSize: 10,
+          padding: "6px 9px",
+          textAlign: "left"
+        }
+      }, /*#__PURE__*/React.createElement("div", null, m.name), /*#__PURE__*/React.createElement("div", {
+        style: {
+          marginTop: 2
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          color: "#2563EB",
+          fontWeight: 600
+        }
+      }, "+", m.p, "g"), /*#__PURE__*/React.createElement("span", {
+        style: {
+          color: "#D97706",
+          marginLeft: 5
+        }
+      }, "+", m.kcal, "kcal")));
+    }))), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: "flex",
+        gap: 6,
         marginBottom: 10
       }
     }, /*#__PURE__*/React.createElement("input", {
@@ -1387,23 +1562,37 @@ function App() {
         return setCn(e.target.value);
       },
       style: _objectSpread(_objectSpread({}, S.inp), {}, {
-        flex: 2
+        flex: 2,
+        fontSize: 12
       })
     }), /*#__PURE__*/React.createElement("input", {
-      placeholder: "g",
+      placeholder: "pro g",
       type: "number",
       value: cg,
       onChange: function onChange(e) {
         return setCg(e.target.value);
       },
       style: _objectSpread(_objectSpread({}, S.inp), {}, {
-        flex: 1
+        flex: 1,
+        fontSize: 12
+      })
+    }), /*#__PURE__*/React.createElement("input", {
+      placeholder: "kcal",
+      type: "number",
+      value: ck,
+      onChange: function onChange(e) {
+        return setCk(e.target.value);
+      },
+      style: _objectSpread(_objectSpread({}, S.inp), {}, {
+        flex: 1,
+        fontSize: 12
       })
     }), /*#__PURE__*/React.createElement("button", {
       onClick: function onClick() {
-        return addP(cn || "Custom", cg, function () {
+        return addP(cn || "Custom", cg, ck, function () {
           setCn("");
           setCg("");
+          setCk("");
         });
       },
       style: S.btn("#2563EB")
@@ -1426,15 +1615,20 @@ function App() {
         style: {
           display: "flex",
           alignItems: "center",
-          gap: 10
+          gap: 8
         }
       }, /*#__PURE__*/React.createElement("span", {
         style: {
-          fontSize: 12,
-          color: "#059669",
+          fontSize: 11,
+          color: "#2563EB",
           fontWeight: 600
         }
-      }, "+", e.amount, "g"), /*#__PURE__*/React.createElement("span", {
+      }, "+", e.amount, "g"), e.kcal > 0 && /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: 11,
+          color: "#D97706"
+        }
+      }, "+", e.kcal), /*#__PURE__*/React.createElement("span", {
         style: {
           fontSize: 10,
           color: "#333"
@@ -1454,8 +1648,6 @@ function App() {
       }, "\xD7")));
     }))));
   }
-
-  // TRAINING
   function TrainingTab() {
     var _SCHEDULE$trainDay;
     var prog = PROGRAM[trainDay];
@@ -1687,14 +1879,12 @@ function App() {
       })
     }, saved ? "✓ Saved" : "Save Session")));
   }
-
-  // INA
   function InaTab() {
     var dk = "ina_".concat(today());
-    var _useState17 = useState(load("".concat(dk, "_dms"), "")),
-      _useState18 = _slicedToArray(_useState17, 2),
-      dmsVal = _useState18[0],
-      setDmsVal = _useState18[1];
+    var _useState19 = useState(load("".concat(dk, "_dms"), "")),
+      _useState20 = _slicedToArray(_useState19, 2),
+      dmsVal = _useState20[0],
+      setDmsVal = _useState20[1];
     var dmTarget = 50;
     var dmsNum = parseInt(dmsVal) || 0;
     var pct = Math.min(100, Math.round(dmsNum / dmTarget * 100));
@@ -1857,8 +2047,6 @@ function App() {
       }, t.v));
     }))));
   }
-
-  // FINANCE
   function FinanceTab() {
     return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
       style: S.hdr
