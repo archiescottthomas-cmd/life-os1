@@ -85,7 +85,7 @@ function loadSchedule() {
   return merged;
 }
 
-var HABITS = [
+var HABITS_DEFAULT = [
   { id: "water_wake", label: "Water at wake", icon: "💧" },
   { id: "no_phone", label: "No phone at wake", icon: "📵" },
   { id: "personal_dev", label: "Personal development", icon: "📖" },
@@ -99,11 +99,21 @@ var HABITS = [
   { id: "protein", label: "Protein target hit (130g)", icon: "🥩" },
   { id: "post_training", label: "Post-training meal", icon: "🍗" }
 ];
-var WKND_HABITS = [
+var WKND_HABITS_DEFAULT = [
   { id: "batch_cook", label: "Batch cook done", icon: "🍳" },
   { id: "weekly_review", label: "Weekly review done", icon: "📊" }
 ];
-function habitTotalFor(d) { return isWeekendDate(d) ? HABITS.length + WKND_HABITS.length : HABITS.length; }
+function loadHabits() {
+  var cfg = store("habits_cfg");
+  return {
+    weekday: (cfg && cfg.weekday) || HABITS_DEFAULT,
+    weekend: (cfg && cfg.weekend) || WKND_HABITS_DEFAULT
+  };
+}
+function habitTotalFor(d) {
+  var cfg = loadHabits();
+  return isWeekendDate(d) ? cfg.weekday.length + cfg.weekend.length : cfg.weekday.length;
+}
 
 var MEALS = [
   { name: "Breakfast (yogurt + granola)", p: 25, kcal: 450, cat: "meal" },
@@ -137,7 +147,7 @@ function tbtn(active, col) { return { flex: 1, display: "flex", flexDirection: "
 
 // ---------- sync (Firebase, optional) ----------
 var SYNC_PREFIXES = ["habits_", "plog_", "trainwk_", "ina_dm_", "ina_em_"];
-var SYNC_SINGLETONS = ["finance_tx", "schedule_cfg"];
+var SYNC_SINGLETONS = ["finance_tx", "schedule_cfg", "habits_cfg"];
 
 function collectState() {
   var out = {};
@@ -308,6 +318,7 @@ function HabitsTab(props) {
           })}
         </div>
       </div>
+      <${HabitsEditor} habitsCfg=${props.habitsCfg} onSave=${props.setHabitsCfg} />
       <div style=${card}>
         <div style=${Object.assign({}, row, { marginBottom: 6 })}>
           <span style=${{ fontSize: 13, fontWeight: 600 }}>Protein</span>
@@ -357,6 +368,66 @@ function HabitsTab(props) {
           </div>`;
         })}
       </div>` : null}
+    </div>
+  </div>`;
+}
+
+function HabitRow(props) {
+  return html`<div style=${Object.assign({}, row, { gap: 6, marginBottom: 6 })}>
+    <input style=${Object.assign({}, inp, { width: 50, textAlign: "center", padding: "8px 4px" })} value=${props.habit.icon}
+      onChange=${function (e) { props.onChange("icon", e.target.value); }} />
+    <input style=${Object.assign({}, inp, { flex: 1 })} value=${props.habit.label}
+      onChange=${function (e) { props.onChange("label", e.target.value); }} />
+    <button style=${{ background: "#1a1a1a", border: "none", color: "#E74C3C", borderRadius: 6, width: 32, height: 36, fontSize: 14, cursor: "pointer" }} onClick=${props.onRemove}>✕</button>
+  </div>`;
+}
+
+function HabitListEditor(props) {
+  var s1 = useState(""), newIcon = s1[0], setNewIcon = s1[1];
+  var s2 = useState(""), newLabel = s2[0], setNewLabel = s2[1];
+  function updateAt(i, field, value) {
+    var next = props.list.slice();
+    next[i] = Object.assign({}, next[i]);
+    next[i][field] = value;
+    props.onChange(next);
+  }
+  function removeAt(i) {
+    var next = props.list.slice();
+    next.splice(i, 1);
+    props.onChange(next);
+  }
+  function add() {
+    if (!newLabel.trim()) return;
+    var id = "h_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+    props.onChange(props.list.concat([{ id: id, label: newLabel.trim(), icon: newIcon.trim() || "•" }]));
+    setNewIcon(""); setNewLabel("");
+  }
+  return html`<div style=${{ marginBottom: 14 }}>
+    <div style=${Object.assign({}, lbl, { marginBottom: 8 })}>${props.title}</div>
+    ${props.list.map(function (h, i) {
+      return html`<${HabitRow} key=${h.id} habit=${h} onChange=${function (field, value) { updateAt(i, field, value); }} onRemove=${function () { removeAt(i); }} />`;
+    })}
+    <div style=${{ display: "flex", gap: 6, marginTop: 6 }}>
+      <input style=${Object.assign({}, inp, { width: 50, textAlign: "center", padding: "8px 4px" })} placeholder="icon" value=${newIcon} onChange=${function (e) { setNewIcon(e.target.value); }} />
+      <input style=${Object.assign({}, inp, { flex: 1 })} placeholder="New habit label" value=${newLabel} onChange=${function (e) { setNewLabel(e.target.value); }} />
+      <button style=${{ background: "#3B82F633", border: "none", color: "#3B82F6", borderRadius: 6, width: 36, height: 36, fontSize: 18, cursor: "pointer" }} onClick=${add}>+</button>
+    </div>
+  </div>`;
+}
+
+function HabitsEditor(props) {
+  var s = useState(false), editing = s[0], setEditing = s[1];
+  var d = useState(props.habitsCfg), draft = d[0], setDraft = d[1];
+  function startEdit() { setDraft(props.habitsCfg); setEditing(true); }
+  if (!editing) {
+    return html`<button style=${abtn("#1a1a1a")} onClick=${startEdit}>Edit habits</button>`;
+  }
+  return html`<div style=${card}>
+    <${HabitListEditor} title="Every day" list=${draft.weekday} onChange=${function (list) { setDraft(Object.assign({}, draft, { weekday: list })); }} />
+    <${HabitListEditor} title="Weekend extra" list=${draft.weekend} onChange=${function (list) { setDraft(Object.assign({}, draft, { weekend: list })); }} />
+    <div style=${{ display: "flex", gap: 8 }}>
+      <button style=${abtn("#3B82F6")} onClick=${function () { props.onSave(draft); setEditing(false); }}>Save</button>
+      <button style=${abtn("#1a1a1a")} onClick=${function () { setEditing(false); }}>Cancel</button>
     </div>
   </div>`;
 }
@@ -594,6 +665,7 @@ function App() {
   var s1 = useState("today"), tab = s1[0], setTab = s1[1];
   var s2 = useState(today), schedDay = s2[0], setSchedDay = s2[1];
   var s3 = useState(loadSchedule), schedule = s3[0], setSchedule = s3[1];
+  var sH = useState(loadHabits), habitsCfg = sH[0], setHabitsCfg = sH[1];
   var s4 = useState(function () { return store("habits_" + todayStr()) || {}; }), habits = s4[0], setHabits = s4[1];
   var s5 = useState(function () { return store("plog_" + todayStr()) || []; }), pLog = s5[0], setPLog = s5[1];
   var wk = weekKey();
@@ -602,6 +674,7 @@ function App() {
   var s8 = useState(function () { return store("ina_em_" + todayStr()) || { sent: 0, replies: 0, calls: 0 }; }), em = s8[0], setEm = s8[1];
   var s9 = useState(function () { return store("finance_tx") || []; }), tx = s9[0], setTx = s9[1];
 
+  useEffect(function () { store("habits_cfg", habitsCfg); schedulePush(); }, [habitsCfg]);
   useEffect(function () { store("habits_" + todayStr(), habits); schedulePush(); }, [habits]);
   useEffect(function () { store("plog_" + todayStr(), pLog); schedulePush(); }, [pLog]);
   useEffect(function () { store("trainwk_" + wk, trainWk); schedulePush(); }, [trainWk]);
@@ -622,7 +695,7 @@ function App() {
   }, [schedule]);
 
   var isWknd = ["SAT", "SUN"].indexOf(getDay()) !== -1;
-  var allH = isWknd ? HABITS.concat(WKND_HABITS) : HABITS;
+  var allH = isWknd ? habitsCfg.weekday.concat(habitsCfg.weekend) : habitsCfg.weekday;
   var hDone = allH.filter(function (h) { return habits[h.id]; }).length;
   var pTotal = pLog.reduce(function (s, e) { return s + e.amount; }, 0);
   var kcalTotal = pLog.reduce(function (s, e) { return s + (e.kcal || 0); }, 0);
@@ -639,7 +712,7 @@ function App() {
 
   return html`<div style=${{ minHeight: "100vh", background: "#080808", color: "#E0DDD6", paddingBottom: 80 }}>
     ${tab === "today" ? html`<${TodayTab} schedDay=${schedDay} setSchedDay=${setSchedDay} schedule=${schedule} hDone=${hDone} allHLen=${allH.length} pTotal=${pTotal} kcalTotal=${kcalTotal} pTarget=${pTarget} kcalTarget=${kcalTarget} />` : null}
-    ${tab === "habits" ? html`<${HabitsTab} habits=${habits} toggle=${toggle} allH=${allH} hDone=${hDone} pLog=${pLog} addP=${addP} setPLog=${setPLog} pTotal=${pTotal} pTarget=${pTarget} kcalTotal=${kcalTotal} kcalTarget=${kcalTarget} />` : null}
+    ${tab === "habits" ? html`<${HabitsTab} habits=${habits} toggle=${toggle} allH=${allH} hDone=${hDone} pLog=${pLog} addP=${addP} setPLog=${setPLog} pTotal=${pTotal} pTarget=${pTarget} kcalTotal=${kcalTotal} kcalTarget=${kcalTarget} habitsCfg=${habitsCfg} setHabitsCfg=${setHabitsCfg} />` : null}
     ${tab === "training" ? html`<${TrainTab} schedule=${schedule} onSaveSchedule=${setSchedule} trainWk=${trainWk} setTrainWk=${setTrainWk} />` : null}
     ${tab === "ina" ? html`<${InaTab} dm=${dm} setDm=${setDm} em=${em} setEm=${setEm} />` : null}
     ${tab === "trends" ? html`<${TrendsTab} />` : null}
