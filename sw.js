@@ -1,4 +1,4 @@
-const CACHE = 'life-os-v2';
+const CACHE = 'life-os-v3';
 const ASSETS = [
   './life-os.html',
   './manifest.json',
@@ -6,6 +6,7 @@ const ASSETS = [
   './icon-512.png',
   'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js',
+  'https://unpkg.com/htm@3.1.1/dist/htm.js',
 ];
 
 self.addEventListener('install', e => {
@@ -22,8 +23,35 @@ self.addEventListener('activate', e => {
   );
 });
 
+function isHtmlRequest(req) {
+  return req.mode === 'navigate' || req.url.endsWith('life-os.html') || req.url.endsWith('/');
+}
+
 self.addEventListener('fetch', e => {
+  const req = e.request;
+
+  // Always go to the network first for the app shell so updates land immediately.
+  // Cache is only a fallback for when the phone is offline.
+  if (isHtmlRequest(req)) {
+    e.respondWith(
+      fetch(req)
+        .then(res => {
+          caches.open(CACHE).then(c => c.put(req, res.clone()));
+          return res;
+        })
+        .catch(() => caches.match(req).then(r => r || caches.match('./life-os.html')))
+    );
+    return;
+  }
+
+  // Static assets (icons, vendored libs) rarely change — cache-first is fine.
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => caches.match('./life-os.html')))
+    caches.match(req).then(cached =>
+      cached ||
+      fetch(req).then(res => {
+        caches.open(CACHE).then(c => c.put(req, res.clone()));
+        return res;
+      })
+    )
   );
 });
