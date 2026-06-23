@@ -145,6 +145,15 @@ function loadHabits() {
     weekend: (cfg && cfg.weekend) || WKND_HABITS_DEFAULT
   };
 }
+function loadGoals() {
+  var g = store("finance_goals") || {};
+  var blank = function (saved) { return Object.assign({ target: "0", current: "0" }, saved); };
+  return {
+    emergency: blank(g.emergency),
+    investment: blank(g.investment),
+    savings: blank(g.savings)
+  };
+}
 function habitTotalFor(d) {
   var cfg = loadHabits();
   return isWeekendDate(d) ? cfg.weekday.length + cfg.weekend.length : cfg.weekday.length;
@@ -182,7 +191,7 @@ function tbtn(active, col) { return { flex: 1, display: "flex", flexDirection: "
 
 // ---------- sync (Firebase, optional) ----------
 var SYNC_PREFIXES = ["habits_", "plog_", "trainwk_", "ina_dm_", "ina_em_", "workout_log_"];
-var SYNC_SINGLETONS = ["finance_tx", "schedule_cfg", "habits_cfg", "workout_plan_cfg"];
+var SYNC_SINGLETONS = ["finance_tx", "schedule_cfg", "habits_cfg", "workout_plan_cfg", "finance_goals"];
 
 function collectState() {
   var out = {};
@@ -763,10 +772,46 @@ function TrendsTab() {
   </div>`;
 }
 
+function GoalCard(props) {
+  var goal = props.goal;
+  var target = parseFloat(goal.target) || 0;
+  var current = parseFloat(goal.current) || 0;
+  var pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+  var barColor = pct >= 100 ? "#059669" : props.color;
+  return html`<div style=${card}>
+    <div style=${Object.assign({}, row, { marginBottom: 8 })}>
+      <span style=${{ fontSize: 13, fontWeight: 700 }}>${props.title}</span>
+      <span style=${{ fontSize: 12, fontWeight: 700, color: barColor }}>${pct}%</span>
+    </div>
+    <div style=${{ background: "#1a1a1a", borderRadius: 4, height: 6, marginBottom: 10 }}>
+      <div style=${{ background: barColor, borderRadius: 4, height: 6, width: pct + "%", transition: "width 0.3s" }}></div>
+    </div>
+    <div style=${{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 8 }}>
+      <div>
+        <div style=${Object.assign({}, lbl, { marginBottom: 4, fontSize: 9 })}>Current (£)</div>
+        <input style=${inp} type="number" value=${goal.current} onChange=${function (e) { props.onChange("current", e.target.value); }} />
+      </div>
+      <div>
+        <div style=${Object.assign({}, lbl, { marginBottom: 4, fontSize: 9 })}>Goal (£)</div>
+        <input style=${inp} type="number" value=${goal.target} onChange=${function (e) { props.onChange("target", e.target.value); }} />
+      </div>
+    </div>
+    <div style=${{ fontSize: 11, color: "#555", textAlign: "center" }}>£${current} of £${target}</div>
+  </div>`;
+}
+
 function FinanceTab(props) {
   var s1 = useState(""), desc = s1[0], setDesc = s1[1];
   var s2 = useState(""), amt = s2[0], setAmt = s2[1];
   var s3 = useState("expense"), type = s3[0], setType = s3[1];
+  function updateGoal(key, field, value) {
+    props.setGoals(function (g) {
+      var n = Object.assign({}, g);
+      n[key] = Object.assign({}, n[key]);
+      n[key][field] = value;
+      return n;
+    });
+  }
   var income = props.tx.filter(function (t) { return t.type === "income"; }).reduce(function (s, t) { return s + t.amt; }, 0);
   var expenses = props.tx.filter(function (t) { return t.type === "expense"; }).reduce(function (s, t) { return s + t.amt; }, 0);
   var net = income - expenses;
@@ -803,6 +848,9 @@ function FinanceTab(props) {
         <div style=${row}><span style=${{ fontSize: 12, color: "#888" }}>Expenses</span><span style=${{ fontSize: 13, fontWeight: 700, color: "#EF4444" }}>£${monthExpenses}</span></div>
         <div style=${row}><span style=${{ fontSize: 12, color: "#888" }}>Net</span><span style=${{ fontSize: 13, fontWeight: 700, color: (monthIncome - monthExpenses) >= 0 ? "#059669" : "#EF4444" }}>£${monthIncome - monthExpenses}</span></div>
       </div>
+      <${GoalCard} title="Emergency Fund" color="#3B82F6" goal=${props.goals.emergency} onChange=${function (f, v) { updateGoal("emergency", f, v); }} />
+      <${GoalCard} title="Investments" color="#8B5CF6" goal=${props.goals.investment} onChange=${function (f, v) { updateGoal("investment", f, v); }} />
+      <${GoalCard} title="Savings" color="#10B981" goal=${props.goals.savings} onChange=${function (f, v) { updateGoal("savings", f, v); }} />
       <div style=${card}>
         <div style=${Object.assign({}, lbl, { marginBottom: 8 })}>Add Transaction</div>
         <input style=${Object.assign({}, inp, { marginBottom: 6 })} placeholder="Description" value=${desc} onChange=${function (e) { setDesc(e.target.value); }} />
@@ -861,6 +909,7 @@ function App() {
   var s7 = useState(function () { return store("ina_dm_" + todayStr()) || { sent: 0, replies: 0, calls: 0 }; }), dm = s7[0], setDm = s7[1];
   var s8 = useState(function () { return store("ina_em_" + todayStr()) || { sent: 0, replies: 0, calls: 0 }; }), em = s8[0], setEm = s8[1];
   var s9 = useState(function () { return store("finance_tx") || []; }), tx = s9[0], setTx = s9[1];
+  var sG = useState(loadGoals), goals = sG[0], setGoals = sG[1];
 
   useEffect(function () { store("habits_cfg", habitsCfg); schedulePush(); }, [habitsCfg]);
   useEffect(function () { store("workout_plan_cfg", workoutPlan); schedulePush(); }, [workoutPlan]);
@@ -871,6 +920,7 @@ function App() {
   useEffect(function () { store("ina_dm_" + todayStr(), dm); schedulePush(); }, [dm]);
   useEffect(function () { store("ina_em_" + todayStr(), em); schedulePush(); }, [em]);
   useEffect(function () { store("finance_tx", tx); schedulePush(); }, [tx]);
+  useEffect(function () { store("finance_goals", goals); schedulePush(); }, [goals]);
   useEffect(function () {
     var override = {};
     ALL_DAYS.forEach(function (d) {
@@ -906,7 +956,7 @@ function App() {
     ${tab === "training" ? html`<${TrainTab} schedule=${schedule} onSaveSchedule=${setSchedule} trainWk=${trainWk} setTrainWk=${setTrainWk} workoutPlan=${workoutPlan} onSaveWorkoutPlan=${setWorkoutPlan} workoutLog=${workoutLog} setWorkoutLog=${setWorkoutLog} />` : null}
     ${tab === "ina" ? html`<${InaTab} dm=${dm} setDm=${setDm} em=${em} setEm=${setEm} />` : null}
     ${tab === "trends" ? html`<${TrendsTab} />` : null}
-    ${tab === "finance" ? html`<${FinanceTab} tx=${tx} setTx=${setTx} />` : null}
+    ${tab === "finance" ? html`<${FinanceTab} tx=${tx} setTx=${setTx} goals=${goals} setGoals=${setGoals} />` : null}
     <${BottomNav} tab=${tab} setTab=${setTab} />
   </div>`;
 }
