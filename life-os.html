@@ -68,13 +68,58 @@ function getDay() {
 var DC = { MON: "#3B82F6", TUE: "#8B5CF6", WED: "#10B981", THU: "#F59E0B", FRI: "#EF4444", SAT: "#EC4899", SUN: "#6366F1" };
 
 var SCHEDULE_DEFAULT = {
-  MON: { label: "Push + INA", wake: "07:00", gym: "Push (Chest/Shoulders/Triceps)" },
-  TUE: { label: "Pull + Content", wake: "07:00", gym: "Pull (Back/Biceps)" },
-  WED: { label: "Legs + INA", wake: "07:00", gym: "Legs (Quads/Hams/Calves)" },
-  THU: { label: "Push + Content", wake: "07:00", gym: "Push variation" },
-  FRI: { label: "Pull + INA", wake: "07:00", gym: "Pull variation" },
-  SAT: { label: "Rest + Batch", wake: "08:30", gym: null },
-  SUN: { label: "Rest + Review", wake: "08:30", gym: null }
+  MON: { label: "Upper (Strength)", wake: "07:00", gym: "Upper (Strength)" },
+  TUE: { label: "Lower (Strength)", wake: "07:00", gym: "Lower (Strength)" },
+  WED: { label: "Rest", wake: "07:00", gym: null },
+  THU: { label: "Recovery + Core", wake: "07:00", gym: "Recovery + Core (home, 25 min)" },
+  FRI: { label: "Upper (Hypertrophy)", wake: "07:00", gym: "Upper (Hypertrophy)" },
+  SAT: { label: "Lower (Hypertrophy)", wake: "08:30", gym: "Lower (Hypertrophy)" },
+  SUN: { label: "Rest", wake: "08:30", gym: null }
+};
+function ex(name, sets, reps, note) { return { id: "ex_" + name.toLowerCase().replace(/[^a-z0-9]+/g, "_"), name: name, sets: sets, reps: reps, note: note || "" }; }
+var WORKOUT_PLAN_DEFAULT = {
+  MON: [
+    ex("Flat Bench Press", "4", "5-8", "top set 75kg"),
+    ex("Incline Dumbbell Press", "3", "6-10", "top set 22kg"),
+    ex("Deadlift", "3", "5-8", "top set 110kg"),
+    ex("T-Bar Row", "3", "8-12", "top set 40kg"),
+    ex("Lateral Raises", "3", "12-15", "top set 14kg")
+  ],
+  TUE: [
+    ex("Barbell Squat", "4", "5-8", "top set 100kg"),
+    ex("Romanian Deadlift", "3", "6-10", ""),
+    ex("Leg Extension", "3", "10-15", "top set 52kg"),
+    ex("Lying Leg Curl", "3", "10-15", ""),
+    ex("Standing Calf Raises", "3", "12-15", "top set 40kg")
+  ],
+  WED: [],
+  THU: [
+    ex("Leg Raise + Knee Tuck Superset", "3", "15-20", ""),
+    ex("Weighted Crunches", "3", "15-20", ""),
+    ex("Shoulder Mobility", "1", "-", ""),
+    ex("Full Body Stretch", "1", "-", "")
+  ],
+  FRI: [
+    ex("Incline Dumbbell Press", "3", "8-12", ""),
+    ex("Cable Flys", "2", "12-15", ""),
+    ex("Lat Pulldown", "3", "8-12", "top set 73kg"),
+    ex("T-Bar Row", "2", "10-12", ""),
+    ex("Lateral Raises", "2", "12-15", ""),
+    ex("Cable Lateral Raises", "2", "12-15", ""),
+    ex("Barbell Curl", "3", "8-12", "top set 30kg"),
+    ex("Hammer Curl", "2", "10-15", ""),
+    ex("Overhead Cable Extension", "3", "10-12", ""),
+    ex("Rope Pushdown", "2", "12-15", "keep rest to 60 sec on arms")
+  ],
+  SAT: [
+    ex("Hack Squat", "3", "8-12", "alternate with Barbell Squat weekly"),
+    ex("Romanian Deadlift", "3", "8-12", ""),
+    ex("Leg Extension", "3", "12-15", ""),
+    ex("Lying Leg Curl", "3", "12-15", ""),
+    ex("Standing Calf Raises", "3", "12-15", ""),
+    ex("Optional Abs", "1", "-", "if time allows")
+  ],
+  SUN: []
 };
 function loadSchedule() {
   var override = store("schedule_cfg") || {};
@@ -87,7 +132,7 @@ function loadSchedule() {
 function loadWorkoutPlan() {
   var cfg = store("workout_plan_cfg");
   var merged = {};
-  ALL_DAYS.forEach(function (d) { merged[d] = (cfg && cfg[d]) || []; });
+  ALL_DAYS.forEach(function (d) { merged[d] = (cfg && cfg[d]) || WORKOUT_PLAN_DEFAULT[d] || []; });
   return merged;
 }
 function getAllExerciseNames() {
@@ -477,14 +522,20 @@ function HabitsEditor(props) {
 }
 
 function ExerciseRow(props) {
-  return html`<div style=${{ display: "flex", gap: 6, marginBottom: 6, alignItems: "center" }}>
-    <input style=${Object.assign({}, inp, { flex: 2 })} placeholder="Exercise" value=${props.ex.name}
-      onChange=${function (e) { props.onChange("name", e.target.value); }} />
-    <input style=${Object.assign({}, inp, { width: 50 })} placeholder="Sets" value=${props.ex.sets}
-      onChange=${function (e) { props.onChange("sets", e.target.value); }} />
-    <input style=${Object.assign({}, inp, { width: 60 })} placeholder="Reps" value=${props.ex.reps}
-      onChange=${function (e) { props.onChange("reps", e.target.value); }} />
-    <button style=${{ background: "#1a1a1a", border: "none", color: "#E74C3C", borderRadius: 6, width: 32, height: 36, fontSize: 14, cursor: "pointer" }} onClick=${props.onRemove}>✕</button>
+  return html`<div style=${{ marginBottom: 10, paddingBottom: 8, borderBottom: "1px solid #1a1a1a" }}>
+    <div style=${{ display: "flex", gap: 6, marginBottom: 6, alignItems: "center" }}>
+      <input style=${Object.assign({}, inp, { flex: 1 })} placeholder="Exercise" value=${props.ex.name}
+        onChange=${function (e) { props.onChange("name", e.target.value); }} />
+      <button style=${{ background: "#1a1a1a", border: "none", color: "#E74C3C", borderRadius: 6, width: 32, height: 36, fontSize: 14, cursor: "pointer" }} onClick=${props.onRemove}>✕</button>
+    </div>
+    <div style=${{ display: "flex", gap: 6 }}>
+      <input style=${Object.assign({}, inp, { width: 46 })} placeholder="Sets" value=${props.ex.sets}
+        onChange=${function (e) { props.onChange("sets", e.target.value); }} />
+      <input style=${Object.assign({}, inp, { width: 60 })} placeholder="Reps" value=${props.ex.reps}
+        onChange=${function (e) { props.onChange("reps", e.target.value); }} />
+      <input style=${Object.assign({}, inp, { flex: 1 })} placeholder="Note (e.g. top set 75kg)" value=${props.ex.note || ""}
+        onChange=${function (e) { props.onChange("note", e.target.value); }} />
+    </div>
   </div>`;
 }
 
@@ -492,6 +543,7 @@ function ExerciseListEditor(props) {
   var s1 = useState(""), newName = s1[0], setNewName = s1[1];
   var s2 = useState("4"), newSets = s2[0], setNewSets = s2[1];
   var s3 = useState("8-10"), newReps = s3[0], setNewReps = s3[1];
+  var s4 = useState(""), newNote = s4[0], setNewNote = s4[1];
   function updateAt(i, field, value) {
     var next = props.list.slice();
     next[i] = Object.assign({}, next[i]);
@@ -506,19 +558,22 @@ function ExerciseListEditor(props) {
   function add() {
     if (!newName.trim()) return;
     var id = "ex_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
-    props.onChange(props.list.concat([{ id: id, name: newName.trim(), sets: newSets, reps: newReps }]));
-    setNewName(""); setNewSets("4"); setNewReps("8-10");
+    props.onChange(props.list.concat([{ id: id, name: newName.trim(), sets: newSets, reps: newReps, note: newNote.trim() }]));
+    setNewName(""); setNewSets("4"); setNewReps("8-10"); setNewNote("");
   }
   return html`<div style=${{ marginTop: 8 }}>
     <div style=${Object.assign({}, lbl, { marginBottom: 6, fontSize: 9 })}>Exercises</div>
     ${props.list.map(function (ex, i) {
       return html`<${ExerciseRow} key=${ex.id} ex=${ex} onChange=${function (f, v) { updateAt(i, f, v); }} onRemove=${function () { removeAt(i); }} />`;
     })}
-    <div style=${{ display: "flex", gap: 6 }}>
-      <input style=${Object.assign({}, inp, { flex: 2 })} placeholder="New exercise" value=${newName} onChange=${function (e) { setNewName(e.target.value); }} />
-      <input style=${Object.assign({}, inp, { width: 50 })} placeholder="Sets" value=${newSets} onChange=${function (e) { setNewSets(e.target.value); }} />
-      <input style=${Object.assign({}, inp, { width: 60 })} placeholder="Reps" value=${newReps} onChange=${function (e) { setNewReps(e.target.value); }} />
+    <div style=${{ display: "flex", gap: 6, marginBottom: 6 }}>
+      <input style=${Object.assign({}, inp, { flex: 1 })} placeholder="New exercise" value=${newName} onChange=${function (e) { setNewName(e.target.value); }} />
       <button style=${{ background: "#3B82F633", border: "none", color: "#3B82F6", borderRadius: 6, width: 36, fontSize: 18, cursor: "pointer" }} onClick=${add}>+</button>
+    </div>
+    <div style=${{ display: "flex", gap: 6 }}>
+      <input style=${Object.assign({}, inp, { width: 46 })} placeholder="Sets" value=${newSets} onChange=${function (e) { setNewSets(e.target.value); }} />
+      <input style=${Object.assign({}, inp, { width: 60 })} placeholder="Reps" value=${newReps} onChange=${function (e) { setNewReps(e.target.value); }} />
+      <input style=${Object.assign({}, inp, { flex: 1 })} placeholder="Note (optional)" value=${newNote} onChange=${function (e) { setNewNote(e.target.value); }} />
     </div>
   </div>`;
 }
@@ -606,10 +661,11 @@ function WorkoutLogger(props) {
     ${props.exercises.map(function (ex) {
       var loggedSets = (props.log.sets && props.log.sets[ex.name]) || [];
       return html`<div key=${ex.id} style=${{ marginBottom: 14, paddingBottom: 10, borderBottom: "1px solid #1a1a1a" }}>
-        <div style=${Object.assign({}, row, { marginBottom: 6 })}>
+        <div style=${Object.assign({}, row, { marginBottom: 2 })}>
           <span style=${{ fontSize: 13, fontWeight: 600 }}>${ex.name}</span>
           <span style=${{ fontSize: 11, color: "#555" }}>target ${ex.sets}×${ex.reps}</span>
         </div>
+        ${ex.note ? html`<div style=${{ fontSize: 11, color: "#F59E0B", marginBottom: 6 }}>${ex.note}</div>` : null}
         ${loggedSets.map(function (s, i) {
           return html`<div key=${i} style=${{ display: "flex", gap: 6, marginBottom: 4, alignItems: "center" }}>
             <span style=${{ fontSize: 11, color: "#444", width: 14 }}>${i + 1}</span>
