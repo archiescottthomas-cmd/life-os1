@@ -84,6 +84,41 @@ function loadSchedule() {
   });
   return merged;
 }
+function loadWorkoutPlan() {
+  var cfg = store("workout_plan_cfg");
+  var merged = {};
+  ALL_DAYS.forEach(function (d) { merged[d] = (cfg && cfg[d]) || []; });
+  return merged;
+}
+function getAllExerciseNames() {
+  var names = {};
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k.indexOf("workout_log_") === 0) {
+      var rec = store(k);
+      if (rec && rec.sets) Object.keys(rec.sets).forEach(function (n) { if (rec.sets[n] && rec.sets[n].length) names[n] = true; });
+    }
+  }
+  return Object.keys(names).sort();
+}
+function getExerciseHistory(name) {
+  var rows = [];
+  for (var i = 0; i < localStorage.length; i++) {
+    var k = localStorage.key(i);
+    if (k.indexOf("workout_log_") === 0) {
+      var rec = store(k);
+      if (rec && rec.sets && rec.sets[name] && rec.sets[name].length) {
+        var sets = rec.sets[name].filter(function (s) { return s.weight !== "" && s.reps !== ""; });
+        if (sets.length) {
+          var maxW = Math.max.apply(null, sets.map(function (s) { return parseFloat(s.weight) || 0; }));
+          rows.push({ date: k.slice("workout_log_".length), sets: sets, maxWeight: maxW });
+        }
+      }
+    }
+  }
+  rows.sort(function (a, b) { return new Date(b.date) - new Date(a.date); });
+  return rows;
+}
 
 var HABITS_DEFAULT = [
   { id: "water_wake", label: "Water at wake", icon: "💧" },
@@ -146,8 +181,8 @@ function atag(col) { return { background: col + "22", color: col, borderRadius: 
 function tbtn(active, col) { return { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "8px 0", background: "none", border: "none", color: active ? col : "#444", cursor: "pointer" }; }
 
 // ---------- sync (Firebase, optional) ----------
-var SYNC_PREFIXES = ["habits_", "plog_", "trainwk_", "ina_dm_", "ina_em_"];
-var SYNC_SINGLETONS = ["finance_tx", "schedule_cfg", "habits_cfg"];
+var SYNC_PREFIXES = ["habits_", "plog_", "trainwk_", "ina_dm_", "ina_em_", "workout_log_"];
+var SYNC_SINGLETONS = ["finance_tx", "schedule_cfg", "habits_cfg", "workout_plan_cfg"];
 
 function collectState() {
   var out = {};
@@ -432,10 +467,58 @@ function HabitsEditor(props) {
   </div>`;
 }
 
+function ExerciseRow(props) {
+  return html`<div style=${{ display: "flex", gap: 6, marginBottom: 6, alignItems: "center" }}>
+    <input style=${Object.assign({}, inp, { flex: 2 })} placeholder="Exercise" value=${props.ex.name}
+      onChange=${function (e) { props.onChange("name", e.target.value); }} />
+    <input style=${Object.assign({}, inp, { width: 50 })} placeholder="Sets" value=${props.ex.sets}
+      onChange=${function (e) { props.onChange("sets", e.target.value); }} />
+    <input style=${Object.assign({}, inp, { width: 60 })} placeholder="Reps" value=${props.ex.reps}
+      onChange=${function (e) { props.onChange("reps", e.target.value); }} />
+    <button style=${{ background: "#1a1a1a", border: "none", color: "#E74C3C", borderRadius: 6, width: 32, height: 36, fontSize: 14, cursor: "pointer" }} onClick=${props.onRemove}>✕</button>
+  </div>`;
+}
+
+function ExerciseListEditor(props) {
+  var s1 = useState(""), newName = s1[0], setNewName = s1[1];
+  var s2 = useState("4"), newSets = s2[0], setNewSets = s2[1];
+  var s3 = useState("8-10"), newReps = s3[0], setNewReps = s3[1];
+  function updateAt(i, field, value) {
+    var next = props.list.slice();
+    next[i] = Object.assign({}, next[i]);
+    next[i][field] = value;
+    props.onChange(next);
+  }
+  function removeAt(i) {
+    var next = props.list.slice();
+    next.splice(i, 1);
+    props.onChange(next);
+  }
+  function add() {
+    if (!newName.trim()) return;
+    var id = "ex_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+    props.onChange(props.list.concat([{ id: id, name: newName.trim(), sets: newSets, reps: newReps }]));
+    setNewName(""); setNewSets("4"); setNewReps("8-10");
+  }
+  return html`<div style=${{ marginTop: 8 }}>
+    <div style=${Object.assign({}, lbl, { marginBottom: 6, fontSize: 9 })}>Exercises</div>
+    ${props.list.map(function (ex, i) {
+      return html`<${ExerciseRow} key=${ex.id} ex=${ex} onChange=${function (f, v) { updateAt(i, f, v); }} onRemove=${function () { removeAt(i); }} />`;
+    })}
+    <div style=${{ display: "flex", gap: 6 }}>
+      <input style=${Object.assign({}, inp, { flex: 2 })} placeholder="New exercise" value=${newName} onChange=${function (e) { setNewName(e.target.value); }} />
+      <input style=${Object.assign({}, inp, { width: 50 })} placeholder="Sets" value=${newSets} onChange=${function (e) { setNewSets(e.target.value); }} />
+      <input style=${Object.assign({}, inp, { width: 60 })} placeholder="Reps" value=${newReps} onChange=${function (e) { setNewReps(e.target.value); }} />
+      <button style=${{ background: "#3B82F633", border: "none", color: "#3B82F6", borderRadius: 6, width: 36, fontSize: 18, cursor: "pointer" }} onClick=${add}>+</button>
+    </div>
+  </div>`;
+}
+
 function ScheduleEditor(props) {
   var s = useState(false), editing = s[0], setEditing = s[1];
   var d = useState(props.schedule), draft = d[0], setDraft = d[1];
-  function startEdit() { setDraft(props.schedule); setEditing(true); }
+  var p = useState(props.workoutPlan), planDraft = p[0], setPlanDraft = p[1];
+  function startEdit() { setDraft(props.schedule); setPlanDraft(props.workoutPlan); setEditing(true); }
   function patch(day, field, value) {
     setDraft(function (cur) {
       var next = Object.assign({}, cur);
@@ -444,12 +527,19 @@ function ScheduleEditor(props) {
       return next;
     });
   }
+  function patchPlan(day, list) {
+    setPlanDraft(function (cur) {
+      var next = Object.assign({}, cur);
+      next[day] = list;
+      return next;
+    });
+  }
   if (!editing) {
     return html`<button style=${abtn("#1a1a1a")} onClick=${startEdit}>Edit schedule & workouts</button>`;
   }
   return html`<div style=${card}>
     ${ALL_DAYS.map(function (day) {
-      return html`<div key=${day} style=${{ marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid #1a1a1a" }}>
+      return html`<div key=${day} style=${{ marginBottom: 14, paddingBottom: 14, borderBottom: "1px solid #1a1a1a" }}>
         <div style=${Object.assign({}, lbl, { marginBottom: 6, color: DC[day] })}>${day}</div>
         <input style=${Object.assign({}, inp, { marginBottom: 4 })} placeholder="Label" value=${draft[day].label}
           onChange=${function (e) { patch(day, "label", e.target.value); }} />
@@ -459,16 +549,110 @@ function ScheduleEditor(props) {
           <input style=${Object.assign({}, inp, { flex: 2 })} placeholder="Gym / training (blank = rest)" value=${draft[day].gym || ""}
             onChange=${function (e) { patch(day, "gym", e.target.value || null); }} />
         </div>
+        <${ExerciseListEditor} list=${planDraft[day]} onChange=${function (list) { patchPlan(day, list); }} />
       </div>`;
     })}
     <div style=${{ display: "flex", gap: 8 }}>
-      <button style=${abtn("#3B82F6")} onClick=${function () { props.onSave(draft); setEditing(false); }}>Save</button>
+      <button style=${abtn("#3B82F6")} onClick=${function () { props.onSave(draft); props.onSavePlan(planDraft); setEditing(false); }}>Save</button>
       <button style=${abtn("#1a1a1a")} onClick=${function () { setEditing(false); }}>Cancel</button>
     </div>
   </div>`;
 }
 
+function WorkoutLogger(props) {
+  function addSet(name) {
+    props.setLog(function (l) {
+      var n = Object.assign({}, l, { sets: Object.assign({}, l.sets) });
+      n.sets[name] = (n.sets[name] || []).concat([{ weight: "", reps: "" }]);
+      return n;
+    });
+  }
+  function updateSet(name, idx, field, value) {
+    props.setLog(function (l) {
+      var n = Object.assign({}, l, { sets: Object.assign({}, l.sets) });
+      var arr = n.sets[name].slice();
+      arr[idx] = Object.assign({}, arr[idx]);
+      arr[idx][field] = value;
+      n.sets[name] = arr;
+      return n;
+    });
+  }
+  function removeSet(name, idx) {
+    props.setLog(function (l) {
+      var n = Object.assign({}, l, { sets: Object.assign({}, l.sets) });
+      var arr = n.sets[name].slice();
+      arr.splice(idx, 1);
+      n.sets[name] = arr;
+      return n;
+    });
+  }
+  if (!props.exercises.length) {
+    return html`<div style=${card}>
+      <div style=${Object.assign({}, lbl, { marginBottom: 6 })}>Today's Workout</div>
+      <div style=${{ fontSize: 12, color: "#555" }}>No exercises planned for today. Add some via "Edit schedule & workouts" below.</div>
+    </div>`;
+  }
+  return html`<div style=${card}>
+    <div style=${Object.assign({}, lbl, { marginBottom: 10 })}>Today's Workout</div>
+    ${props.exercises.map(function (ex) {
+      var loggedSets = (props.log.sets && props.log.sets[ex.name]) || [];
+      return html`<div key=${ex.id} style=${{ marginBottom: 14, paddingBottom: 10, borderBottom: "1px solid #1a1a1a" }}>
+        <div style=${Object.assign({}, row, { marginBottom: 6 })}>
+          <span style=${{ fontSize: 13, fontWeight: 600 }}>${ex.name}</span>
+          <span style=${{ fontSize: 11, color: "#555" }}>target ${ex.sets}×${ex.reps}</span>
+        </div>
+        ${loggedSets.map(function (s, i) {
+          return html`<div key=${i} style=${{ display: "flex", gap: 6, marginBottom: 4, alignItems: "center" }}>
+            <span style=${{ fontSize: 11, color: "#444", width: 14 }}>${i + 1}</span>
+            <input style=${Object.assign({}, inp, { flex: 1 })} type="number" placeholder="kg" value=${s.weight}
+              onChange=${function (e) { updateSet(ex.name, i, "weight", e.target.value); }} />
+            <span style=${{ color: "#444", fontSize: 12 }}>×</span>
+            <input style=${Object.assign({}, inp, { flex: 1 })} type="number" placeholder="reps" value=${s.reps}
+              onChange=${function (e) { updateSet(ex.name, i, "reps", e.target.value); }} />
+            <button style=${{ background: "none", border: "none", color: "#E74C3C", fontSize: 14, cursor: "pointer" }} onClick=${function () { removeSet(ex.name, i); }}>✕</button>
+          </div>`;
+        })}
+        <button style=${{ background: "#1a1a1a", border: "none", color: "#3B82F6", borderRadius: 6, padding: "6px 10px", fontSize: 12, cursor: "pointer", marginTop: 4 }}
+          onClick=${function () { addSet(ex.name); }}>+ Add set</button>
+      </div>`;
+    })}
+  </div>`;
+}
+
+function ExerciseProgress() {
+  var names = getAllExerciseNames();
+  var s = useState(names[0] || ""), selected = s[0], setSelected = s[1];
+  useEffect(function () { if (!selected && names.length) setSelected(names[0]); }, [names.length]);
+  if (!names.length) {
+    return html`<div style=${card}>
+      <div style=${Object.assign({}, lbl, { marginBottom: 6 })}>Exercise Progress</div>
+      <div style=${{ fontSize: 12, color: "#555" }}>Log a few workouts to see progressive overload here.</div>
+    </div>`;
+  }
+  var history = selected ? getExerciseHistory(selected) : [];
+  var pr = history.length ? Math.max.apply(null, history.map(function (h) { return h.maxWeight; })) : 0;
+  return html`<div style=${card}>
+    <div style=${Object.assign({}, row, { marginBottom: 10 })}>
+      <span style=${lbl}>Exercise Progress</span>
+      <span style=${atag("#F59E0B")}>PR ${pr}kg</span>
+    </div>
+    <select style=${Object.assign({}, inp, { marginBottom: 10 })} value=${selected} onChange=${function (e) { setSelected(e.target.value); }}>
+      ${names.map(function (n) { return html`<option key=${n} value=${n}>${n}</option>`; })}
+    </select>
+    ${history.length === 0 ? html`<div style=${{ fontSize: 12, color: "#555" }}>No sets logged yet for this exercise.</div>` : history.map(function (h, i) {
+      var dt = new Date(h.date);
+      var dispDate = isNaN(dt) ? h.date : dt.toLocaleDateString("en-GB");
+      return html`<div key=${i} style=${Object.assign({}, row, { padding: "6px 0", borderBottom: "1px solid #111", alignItems: "flex-start" })}>
+        <span style=${{ fontSize: 11, color: "#555", width: 70 }}>${dispDate}</span>
+        <span style=${{ fontSize: 12, flex: 1, textAlign: "right" }}>${h.sets.map(function (s) { return s.weight + "kg×" + s.reps; }).join(", ")}</span>
+      </div>`;
+    })}
+  </div>`;
+}
+
 function TrainTab(props) {
+  var today = getDay();
+  var todayExercises = props.workoutPlan[today] || [];
   return html`<div>
     <div style=${{ padding: "16px 16px 8px", borderBottom: "1px solid #1a1a1a" }}>
       <div style=${lbl}>Training</div>
@@ -486,7 +670,9 @@ function TrainTab(props) {
           <span style=${{ fontSize: 20 }}>${props.trainWk[d] ? "✅" : "⬜"}</span>
         </div>`;
       })}
-      <${ScheduleEditor} schedule=${props.schedule} onSave=${props.onSaveSchedule} />
+      <${WorkoutLogger} exercises=${todayExercises} log=${props.workoutLog} setLog=${props.setWorkoutLog} />
+      <${ExerciseProgress} />
+      <${ScheduleEditor} schedule=${props.schedule} onSave=${props.onSaveSchedule} workoutPlan=${props.workoutPlan} onSavePlan=${props.onSaveWorkoutPlan} />
     </div>
   </div>`;
 }
@@ -666,6 +852,8 @@ function App() {
   var s2 = useState(today), schedDay = s2[0], setSchedDay = s2[1];
   var s3 = useState(loadSchedule), schedule = s3[0], setSchedule = s3[1];
   var sH = useState(loadHabits), habitsCfg = sH[0], setHabitsCfg = sH[1];
+  var sWP = useState(loadWorkoutPlan), workoutPlan = sWP[0], setWorkoutPlan = sWP[1];
+  var sWL = useState(function () { return store("workout_log_" + todayStr()) || { day: today, sets: {} }; }), workoutLog = sWL[0], setWorkoutLog = sWL[1];
   var s4 = useState(function () { return store("habits_" + todayStr()) || {}; }), habits = s4[0], setHabits = s4[1];
   var s5 = useState(function () { return store("plog_" + todayStr()) || []; }), pLog = s5[0], setPLog = s5[1];
   var wk = weekKey();
@@ -675,6 +863,8 @@ function App() {
   var s9 = useState(function () { return store("finance_tx") || []; }), tx = s9[0], setTx = s9[1];
 
   useEffect(function () { store("habits_cfg", habitsCfg); schedulePush(); }, [habitsCfg]);
+  useEffect(function () { store("workout_plan_cfg", workoutPlan); schedulePush(); }, [workoutPlan]);
+  useEffect(function () { store("workout_log_" + todayStr(), workoutLog); schedulePush(); }, [workoutLog]);
   useEffect(function () { store("habits_" + todayStr(), habits); schedulePush(); }, [habits]);
   useEffect(function () { store("plog_" + todayStr(), pLog); schedulePush(); }, [pLog]);
   useEffect(function () { store("trainwk_" + wk, trainWk); schedulePush(); }, [trainWk]);
@@ -713,7 +903,7 @@ function App() {
   return html`<div style=${{ minHeight: "100vh", background: "#080808", color: "#E0DDD6", paddingBottom: 80 }}>
     ${tab === "today" ? html`<${TodayTab} schedDay=${schedDay} setSchedDay=${setSchedDay} schedule=${schedule} hDone=${hDone} allHLen=${allH.length} pTotal=${pTotal} kcalTotal=${kcalTotal} pTarget=${pTarget} kcalTarget=${kcalTarget} />` : null}
     ${tab === "habits" ? html`<${HabitsTab} habits=${habits} toggle=${toggle} allH=${allH} hDone=${hDone} pLog=${pLog} addP=${addP} setPLog=${setPLog} pTotal=${pTotal} pTarget=${pTarget} kcalTotal=${kcalTotal} kcalTarget=${kcalTarget} habitsCfg=${habitsCfg} setHabitsCfg=${setHabitsCfg} />` : null}
-    ${tab === "training" ? html`<${TrainTab} schedule=${schedule} onSaveSchedule=${setSchedule} trainWk=${trainWk} setTrainWk=${setTrainWk} />` : null}
+    ${tab === "training" ? html`<${TrainTab} schedule=${schedule} onSaveSchedule=${setSchedule} trainWk=${trainWk} setTrainWk=${setTrainWk} workoutPlan=${workoutPlan} onSaveWorkoutPlan=${setWorkoutPlan} workoutLog=${workoutLog} setWorkoutLog=${setWorkoutLog} />` : null}
     ${tab === "ina" ? html`<${InaTab} dm=${dm} setDm=${setDm} em=${em} setEm=${setEm} />` : null}
     ${tab === "trends" ? html`<${TrendsTab} />` : null}
     ${tab === "finance" ? html`<${FinanceTab} tx=${tx} setTx=${setTx} />` : null}
