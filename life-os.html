@@ -196,7 +196,8 @@ function loadGoals() {
   return {
     emergency: blank(g.emergency),
     investment: blank(g.investment),
-    savings: blank(g.savings)
+    savings: blank(g.savings),
+    fun: blank(g.fun)
   };
 }
 function habitTotalFor(d) {
@@ -235,7 +236,7 @@ function atag(col) { return { background: col + "22", color: col, borderRadius: 
 function tbtn(active, col) { return { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "8px 0", background: "none", border: "none", color: active ? col : "#444", cursor: "pointer" }; }
 
 // ---------- sync (Firebase, optional) ----------
-var SYNC_PREFIXES = ["habits_", "plog_", "trainwk_", "ina_dm_", "ina_em_", "workout_log_"];
+var SYNC_PREFIXES = ["habits_", "plog_", "trainwk_", "ina_dm_", "ina_em_", "ina_tasks_", "workout_log_"];
 var SYNC_SINGLETONS = ["finance_tx", "schedule_cfg", "habits_cfg", "workout_plan_cfg", "finance_goals"];
 
 function collectState() {
@@ -745,6 +746,9 @@ function TrainTab(props) {
 function OutreachCard(props) {
   function dec(field) { props.setData(function (d) { var n = Object.assign({}, d); n[field] = Math.max(0, n[field] - 1); return n; }); }
   function inc(field) { props.setData(function (d) { var n = Object.assign({}, d); n[field] = n[field] + 1; return n; }); }
+  function setVal(field, value) {
+    props.setData(function (d) { var n = Object.assign({}, d); n[field] = value === "" ? "" : Math.max(0, parseInt(value) || 0); return n; });
+  }
   return html`<div style=${card}>
     <div style=${Object.assign({}, row, { marginBottom: 10 })}>
       <span style=${{ fontSize: 13, fontWeight: 700 }}>${props.title}</span>
@@ -754,9 +758,10 @@ function OutreachCard(props) {
       var field = pair[0], label = pair[1];
       return html`<div key=${field} style=${Object.assign({}, row, { padding: "6px 0", borderBottom: "1px solid #111" })}>
         <span style=${{ fontSize: 12, color: "#888" }}>${label}</span>
-        <div style=${{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style=${{ display: "flex", alignItems: "center", gap: 6 }}>
           <button style=${{ background: "#1a1a1a", border: "none", color: "#E0DDD6", borderRadius: 6, width: 28, height: 28, fontSize: 16, cursor: "pointer" }} onClick=${function () { dec(field); }}>-</button>
-          <span style=${{ fontSize: 14, fontWeight: 700, minWidth: 24, textAlign: "center" }}>${props.data[field]}</span>
+          <input style=${Object.assign({}, inp, { width: 48, textAlign: "center", padding: "6px 4px", fontWeight: 700 })} type="number" value=${props.data[field]}
+            onChange=${function (e) { setVal(field, e.target.value); }} />
           <button style=${{ background: props.color + "33", border: "none", color: props.color, borderRadius: 6, width: 28, height: 28, fontSize: 16, cursor: "pointer" }} onClick=${function () { inc(field); }}>+</button>
         </div>
       </div>`;
@@ -764,20 +769,96 @@ function OutreachCard(props) {
   </div>`;
 }
 
-function InaTab(props) {
+function TaskList(props) {
+  var s = useState(""), text = s[0], setText = s[1];
+  function add() {
+    if (!text.trim()) return;
+    props.setTasks(function (t) { return t.concat([{ id: "t_" + Date.now() + "_" + Math.floor(Math.random() * 1000), text: text.trim(), done: false }]); });
+    setText("");
+  }
+  function toggle(id) {
+    props.setTasks(function (t) { return t.map(function (x) { return x.id === id ? Object.assign({}, x, { done: !x.done }) : x; }); });
+  }
+  function remove(id) {
+    props.setTasks(function (t) { return t.filter(function (x) { return x.id !== id; }); });
+  }
+  var done = props.tasks.filter(function (t) { return t.done; }).length;
+  return html`<div style=${card}>
+    <div style=${Object.assign({}, row, { marginBottom: 8 })}>
+      <span style=${{ fontSize: 13, fontWeight: 700 }}>${props.title}</span>
+      <span style=${{ fontSize: 12, color: "#555" }}>${done}/${props.tasks.length}</span>
+    </div>
+    ${props.tasks.map(function (t) {
+      return html`<div key=${t.id} style=${Object.assign({}, row, { padding: "6px 0", borderBottom: "1px solid #111" })}>
+        <span style=${{ fontSize: 13, flex: 1, color: t.done ? "#555" : "#E0DDD6", textDecoration: t.done ? "line-through" : "none", cursor: "pointer" }}
+          onClick=${function () { toggle(t.id); }}>${t.text}</span>
+        <button style=${{ background: "none", border: "none", color: "#E74C3C", fontSize: 13, cursor: "pointer" }} onClick=${function () { remove(t.id); }}>✕</button>
+      </div>`;
+    })}
+    <div style=${{ display: "flex", gap: 6, marginTop: 8 }}>
+      <input style=${Object.assign({}, inp, { flex: 1 })} placeholder="Add task" value=${text}
+        onChange=${function (e) { setText(e.target.value); }}
+        onKeyDown=${function (e) { if (e.key === "Enter") add(); }} />
+      <button style=${{ background: "#3B82F633", border: "none", color: "#3B82F6", borderRadius: 6, width: 36, fontSize: 18, cursor: "pointer" }} onClick=${add}>+</button>
+    </div>
+  </div>`;
+}
+
+function InaTab() {
+  var s0 = useState(function () { return new Date(); }), selectedDate = s0[0], setSelectedDate = s0[1];
+  var dateStr = selectedDate.toDateString();
+  var isToday = dateStr === todayStr();
+  var wk = weekKey(selectedDate);
+  var s1 = useState(function () { return store("ina_dm_" + dateStr) || { sent: 0, replies: 0, calls: 0 }; }), dm = s1[0], setDm = s1[1];
+  var s2 = useState(function () { return store("ina_em_" + dateStr) || { sent: 0, replies: 0, calls: 0 }; }), em = s2[0], setEm = s2[1];
+  var s3 = useState(function () { return store("ina_tasks_" + dateStr) || []; }), dayTasks = s3[0], setDayTasks = s3[1];
+  var s4 = useState(function () { return store("ina_tasks_week_" + wk) || []; }), weekTasks = s4[0], setWeekTasks = s4[1];
+
+  useEffect(function () {
+    setDm(store("ina_dm_" + dateStr) || { sent: 0, replies: 0, calls: 0 });
+    setEm(store("ina_em_" + dateStr) || { sent: 0, replies: 0, calls: 0 });
+    setDayTasks(store("ina_tasks_" + dateStr) || []);
+    setWeekTasks(store("ina_tasks_week_" + wk) || []);
+  }, [dateStr]);
+
+  useEffect(function () { store("ina_dm_" + dateStr, dm); schedulePush(); }, [dm, dateStr]);
+  useEffect(function () { store("ina_em_" + dateStr, em); schedulePush(); }, [em, dateStr]);
+  useEffect(function () { store("ina_tasks_" + dateStr, dayTasks); schedulePush(); }, [dayTasks, dateStr]);
+  useEffect(function () { store("ina_tasks_week_" + wk, weekTasks); schedulePush(); }, [weekTasks, wk]);
+
+  function changeDay(delta) {
+    setSelectedDate(function (d) {
+      var nd = new Date(d);
+      nd.setDate(nd.getDate() + delta);
+      if (delta > 0 && nd.toDateString() !== todayStr() && nd > new Date()) return d;
+      return nd;
+    });
+  }
+  var dayLabel = isToday ? "Today" : selectedDate.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+
   return html`<div>
     <div style=${{ padding: "16px 16px 8px", borderBottom: "1px solid #1a1a1a" }}>
       <div style=${lbl}>INA Creatives</div>
-      <h1 style=${{ fontSize: 20, fontWeight: 700, margin: "4px 0 0" }}>Outreach — Today</h1>
-    </div>
-    <div style=${{ padding: "12px 16px" }}>
-      <${OutreachCard} title="DM Outreach" data=${props.dm} setData=${props.setDm} color="#EF4444" target=${50} />
-      <${OutreachCard} title="Email Outreach" data=${props.em} setData=${props.setEm} color="#8B5CF6" target=${40} />
-      <div style=${card}>
-        <div style=${{ fontSize: 11, color: "#444", textAlign: "center" }}>
-          Today's reply rate — DM: ${props.dm.sent ? Math.round((props.dm.replies / props.dm.sent) * 100) : 0}% / Email: ${props.em.sent ? Math.round((props.em.replies / props.em.sent) * 100) : 0}%
+      <div style=${Object.assign({}, row, { marginTop: 4 })}>
+        <h1 style=${{ fontSize: 20, fontWeight: 700, margin: 0 }}>Outreach</h1>
+        <div style=${{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button style=${{ background: "#1a1a1a", border: "none", color: "#E0DDD6", borderRadius: 6, width: 28, height: 28, fontSize: 14, cursor: "pointer" }} onClick=${function () { changeDay(-1); }}>‹</button>
+          <span style=${{ fontSize: 12, color: "#888", minWidth: 70, textAlign: "center" }}>${dayLabel}</span>
+          <button style=${{ background: "#1a1a1a", border: "none", color: isToday ? "#333" : "#E0DDD6", borderRadius: 6, width: 28, height: 28, fontSize: 14, cursor: isToday ? "default" : "pointer" }}
+            onClick=${function () { changeDay(1); }} disabled=${isToday}>›</button>
         </div>
       </div>
+    </div>
+    <div style=${{ padding: "12px 16px" }}>
+      <${OutreachCard} title="DM Outreach" data=${dm} setData=${setDm} color="#EF4444" target=${50} />
+      <${OutreachCard} title="Email Outreach" data=${em} setData=${setEm} color="#8B5CF6" target=${40} />
+      <div style=${card}>
+        <div style=${{ fontSize: 11, color: "#444", textAlign: "center" }}>
+          ${dayLabel}'s reply rate — DM: ${dm.sent ? Math.round((dm.replies / dm.sent) * 100) : 0}% / Email: ${em.sent ? Math.round((em.replies / em.sent) * 100) : 0}%
+        </div>
+      </div>
+      <${TaskList} title=${dayLabel + "'s Tasks"} tasks=${dayTasks} setTasks=${setDayTasks} />
+      <${TaskList} title="This Week's Tasks" tasks=${weekTasks} setTasks=${setWeekTasks} />
     </div>
   </div>`;
 }
@@ -907,6 +988,7 @@ function FinanceTab(props) {
       <${GoalCard} title="Emergency Fund" color="#3B82F6" goal=${props.goals.emergency} onChange=${function (f, v) { updateGoal("emergency", f, v); }} />
       <${GoalCard} title="Investments" color="#8B5CF6" goal=${props.goals.investment} onChange=${function (f, v) { updateGoal("investment", f, v); }} />
       <${GoalCard} title="Savings" color="#10B981" goal=${props.goals.savings} onChange=${function (f, v) { updateGoal("savings", f, v); }} />
+      <${GoalCard} title="Fun Savings" color="#EC4899" goal=${props.goals.fun} onChange=${function (f, v) { updateGoal("fun", f, v); }} />
       <div style=${card}>
         <div style=${Object.assign({}, lbl, { marginBottom: 8 })}>Add Transaction</div>
         <input style=${Object.assign({}, inp, { marginBottom: 6 })} placeholder="Description" value=${desc} onChange=${function (e) { setDesc(e.target.value); }} />
@@ -962,8 +1044,6 @@ function App() {
   var s5 = useState(function () { return store("plog_" + todayStr()) || []; }), pLog = s5[0], setPLog = s5[1];
   var wk = weekKey();
   var s6 = useState(function () { return store("trainwk_" + wk) || {}; }), trainWk = s6[0], setTrainWk = s6[1];
-  var s7 = useState(function () { return store("ina_dm_" + todayStr()) || { sent: 0, replies: 0, calls: 0 }; }), dm = s7[0], setDm = s7[1];
-  var s8 = useState(function () { return store("ina_em_" + todayStr()) || { sent: 0, replies: 0, calls: 0 }; }), em = s8[0], setEm = s8[1];
   var s9 = useState(function () { return store("finance_tx") || []; }), tx = s9[0], setTx = s9[1];
   var sG = useState(loadGoals), goals = sG[0], setGoals = sG[1];
 
@@ -973,8 +1053,6 @@ function App() {
   useEffect(function () { store("habits_" + todayStr(), habits); schedulePush(); }, [habits]);
   useEffect(function () { store("plog_" + todayStr(), pLog); schedulePush(); }, [pLog]);
   useEffect(function () { store("trainwk_" + wk, trainWk); schedulePush(); }, [trainWk]);
-  useEffect(function () { store("ina_dm_" + todayStr(), dm); schedulePush(); }, [dm]);
-  useEffect(function () { store("ina_em_" + todayStr(), em); schedulePush(); }, [em]);
   useEffect(function () { store("finance_tx", tx); schedulePush(); }, [tx]);
   useEffect(function () { store("finance_goals", goals); schedulePush(); }, [goals]);
   useEffect(function () {
@@ -1010,7 +1088,7 @@ function App() {
     ${tab === "today" ? html`<${TodayTab} schedDay=${schedDay} setSchedDay=${setSchedDay} schedule=${schedule} hDone=${hDone} allHLen=${allH.length} pTotal=${pTotal} kcalTotal=${kcalTotal} pTarget=${pTarget} kcalTarget=${kcalTarget} />` : null}
     ${tab === "habits" ? html`<${HabitsTab} habits=${habits} toggle=${toggle} allH=${allH} hDone=${hDone} pLog=${pLog} addP=${addP} setPLog=${setPLog} pTotal=${pTotal} pTarget=${pTarget} kcalTotal=${kcalTotal} kcalTarget=${kcalTarget} habitsCfg=${habitsCfg} setHabitsCfg=${setHabitsCfg} />` : null}
     ${tab === "training" ? html`<${TrainTab} schedule=${schedule} onSaveSchedule=${setSchedule} trainWk=${trainWk} setTrainWk=${setTrainWk} workoutPlan=${workoutPlan} onSaveWorkoutPlan=${setWorkoutPlan} workoutLog=${workoutLog} setWorkoutLog=${setWorkoutLog} />` : null}
-    ${tab === "ina" ? html`<${InaTab} dm=${dm} setDm=${setDm} em=${em} setEm=${setEm} />` : null}
+    ${tab === "ina" ? html`<${InaTab} />` : null}
     ${tab === "trends" ? html`<${TrendsTab} />` : null}
     ${tab === "finance" ? html`<${FinanceTab} tx=${tx} setTx=${setTx} goals=${goals} setGoals=${setGoals} />` : null}
     <${BottomNav} tab=${tab} setTab=${setTab} />
