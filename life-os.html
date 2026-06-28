@@ -1274,8 +1274,8 @@ function renderApp() {
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
-    navigator.serviceWorker.register('./sw.js')
-      .then(function(r){console.log('SW ok',r.scope);})
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+      .then(function(r){ console.log('SW ok',r.scope); r.update(); })
       .catch(function(e){console.warn('SW fail',e);});
   });
 }

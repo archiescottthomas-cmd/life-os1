@@ -1,4 +1,4 @@
-const CACHE = 'life-os-v3';
+const CACHE = 'life-os-v4';
 const ASSETS = [
   './life-os.html',
   './manifest.json',
@@ -31,10 +31,13 @@ self.addEventListener('fetch', e => {
   const req = e.request;
 
   // Always go to the network first for the app shell so updates land immediately.
+  // cache: 'no-store' bypasses the browser's HTTP cache (GitHub Pages sends
+  // max-age=600 on the HTML, which would otherwise make "network-first" still
+  // resolve from a stale disk-cached response for up to 10 minutes).
   // Cache is only a fallback for when the phone is offline.
   if (isHtmlRequest(req)) {
     e.respondWith(
-      fetch(req)
+      fetch(req, { cache: 'no-store' })
         .then(res => {
           caches.open(CACHE).then(c => c.put(req, res.clone()));
           return res;
