@@ -259,7 +259,7 @@ function tbtn(active, col) { return { flex: 1, display: "flex", flexDirection: "
 
 // ---------- sync (Firebase, optional) ----------
 var SYNC_PREFIXES = ["habits_", "plog_", "trainwk_", "ina_dm_", "ina_em_", "ina_tasks_", "ina_reengage_", "workout_log_"];
-var SYNC_SINGLETONS = ["finance_tx", "schedule_cfg", "habits_cfg", "workout_plan_cfg", "finance_goals", "weight_log"];
+var SYNC_SINGLETONS = ["finance_tx", "schedule_cfg", "habits_cfg", "workout_plan_cfg", "finance_goals", "weight_log", "ina_leadbank"];
 
 function collectState() {
   var out = {};
@@ -909,6 +909,44 @@ function TaskList(props) {
   </div>`;
 }
 
+function loadLeadBank() {
+  var b = store("ina_leadbank") || {};
+  return { dm: b.dm || 0, email: b.email || 0 };
+}
+
+function LeadBank(props) {
+  function setVal(field, value) {
+    props.setBank(function (b) { var n = Object.assign({}, b); n[field] = value === "" ? "" : Math.max(0, parseInt(value) || 0); return n; });
+  }
+  var channels = [
+    { field: "dm", label: "DM Leads", daily: 50, bankTarget: 200, color: "#EF4444" },
+    { field: "email", label: "Email Leads", daily: 40, bankTarget: 160, color: "#8B5CF6" }
+  ];
+  return html`<div style=${card}>
+    <div style=${Object.assign({}, lbl, { marginBottom: 10 })}>Lead Bank</div>
+    ${channels.map(function (c) {
+      var count = props.bank[c.field] === "" ? 0 : props.bank[c.field];
+      var daysCovered = count / c.daily;
+      var status = daysCovered < 2 ? "#EF4444" : daysCovered < 4 ? "#D97706" : "#059669";
+      var statusLabel = daysCovered < 2 ? "LOW — re-scrape now" : daysCovered < 4 ? "below 4-day target" : "healthy";
+      return html`<div key=${c.field} style=${{ marginBottom: 12 }}>
+        <div style=${Object.assign({}, row, { marginBottom: 6 })}>
+          <span style=${{ fontSize: 12, color: "#888" }}>${c.label}</span>
+          <span style=${{ fontSize: 11, fontWeight: 700, color: status }}>${daysCovered.toFixed(1)}d cover · ${statusLabel}</span>
+        </div>
+        <div style=${{ display: "flex", alignItems: "center", gap: 8 }}>
+          <input style=${Object.assign({}, inp, { width: 70, textAlign: "center", fontWeight: 700 })} type="number" value=${props.bank[c.field]}
+            onChange=${function (e) { setVal(c.field, e.target.value); }} />
+          <span style=${{ fontSize: 11, color: "#444" }}>banked · target ${c.bankTarget}+ (4 days)</span>
+        </div>
+        <div style=${{ background: "#1a1a1a", borderRadius: 4, height: 5, marginTop: 6 }}>
+          <div style=${{ background: status, borderRadius: 4, height: 5, width: Math.min(100, Math.round((count / c.bankTarget) * 100)) + "%", transition: "width 0.3s" }}></div>
+        </div>
+      </div>`;
+    })}
+  </div>`;
+}
+
 function InaTab() {
   var s0 = useState(function () { return new Date(); }), selectedDate = s0[0], setSelectedDate = s0[1];
   var dateStr = selectedDate.toDateString();
@@ -919,6 +957,7 @@ function InaTab() {
   var s3 = useState(function () { return store("ina_tasks_" + dateStr) || []; }), dayTasks = s3[0], setDayTasks = s3[1];
   var s4 = useState(function () { return store("ina_tasks_week_" + wk) || []; }), weekTasks = s4[0], setWeekTasks = s4[1];
   var s5 = useState(function () { return store("ina_reengage_" + dateStr) || { sent: 0, replies: 0 }; }), reengage = s5[0], setReengage = s5[1];
+  var s6 = useState(loadLeadBank), bank = s6[0], setBank = s6[1];
 
   useEffect(function () {
     setDm(store("ina_dm_" + dateStr) || { sent: 0, replies: 0, calls: 0 });
@@ -933,6 +972,7 @@ function InaTab() {
   useEffect(function () { store("ina_tasks_" + dateStr, dayTasks); schedulePush(); }, [dayTasks, dateStr]);
   useEffect(function () { store("ina_tasks_week_" + wk, weekTasks); schedulePush(); }, [weekTasks, wk]);
   useEffect(function () { store("ina_reengage_" + dateStr, reengage); schedulePush(); }, [reengage, dateStr]);
+  useEffect(function () { store("ina_leadbank", bank); schedulePush(); }, [bank]);
 
   function changeDay(delta) {
     setSelectedDate(function (d) {
@@ -958,6 +998,7 @@ function InaTab() {
       </div>
     </div>
     <div style=${{ padding: "12px 16px" }}>
+      <${LeadBank} bank=${bank} setBank=${setBank} />
       <${OutreachCard} title="DM Outreach" data=${dm} setData=${setDm} color="#EF4444" target=${50} />
       <${OutreachCard} title="Email Outreach" data=${em} setData=${setEm} color="#8B5CF6" target=${40} />
       <${OutreachCard} title="Re-engage Sent" data=${reengage} setData=${setReengage} color="#F59E0B" fields=${[["sent", "Sent"], ["replies", "Replies"]]} />
