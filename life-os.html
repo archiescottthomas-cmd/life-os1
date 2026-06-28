@@ -59,6 +59,8 @@ function lastNDates(n) {
   return arr;
 }
 function isWeekendDate(d) { var day = d.getDay(); return day === 0 || day === 6; }
+function isoLocal(d) { var off = d.getTimezoneOffset(); return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10); }
+function dateFromIso(iso) { var p = iso.split("-"); return new Date(parseInt(p[0]), parseInt(p[1]) - 1, parseInt(p[2])); }
 
 var ALL_DAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 function getDay() {
@@ -205,6 +207,26 @@ function habitTotalFor(d) {
   return isWeekendDate(d) ? cfg.weekday.length + cfg.weekend.length : cfg.weekday.length;
 }
 
+var WEIGHT_GOAL = {
+  start: 64,
+  target: 75,
+  milestones: [65.5, 67, 68.5, 70, 71.5, 73, 74.5, 75]
+};
+function loadWeightLog() { return store("weight_log") || []; }
+function computeWeeklyAverages(entries) {
+  var byWeek = {};
+  entries.forEach(function (e) {
+    var wk = weekKey(new Date(e.date));
+    if (!byWeek[wk]) byWeek[wk] = [];
+    byWeek[wk].push(e.weight);
+  });
+  return Object.keys(byWeek).map(function (wk) {
+    var ws = byWeek[wk];
+    var sum = ws.reduce(function (s, w) { return s + w; }, 0);
+    return { week: wk, avg: sum / ws.length, count: ws.length, complete: ws.length >= 7 };
+  }).sort(function (a, b) { return new Date(b.week) - new Date(a.week); });
+}
+
 var MEALS = [
   { name: "Breakfast (yogurt + granola)", p: 25, kcal: 450, cat: "meal" },
   { name: "Bolognese + pasta", p: 38, kcal: 650, cat: "meal" },
@@ -237,7 +259,7 @@ function tbtn(active, col) { return { flex: 1, display: "flex", flexDirection: "
 
 // ---------- sync (Firebase, optional) ----------
 var SYNC_PREFIXES = ["habits_", "plog_", "trainwk_", "ina_dm_", "ina_em_", "ina_tasks_", "workout_log_"];
-var SYNC_SINGLETONS = ["finance_tx", "schedule_cfg", "habits_cfg", "workout_plan_cfg", "finance_goals"];
+var SYNC_SINGLETONS = ["finance_tx", "schedule_cfg", "habits_cfg", "workout_plan_cfg", "finance_goals", "weight_log"];
 
 function collectState() {
   var out = {};
@@ -716,6 +738,86 @@ function ExerciseProgress() {
   </div>`;
 }
 
+function WeightTracker(props) {
+  var log = props.log;
+  var s1 = useState(function () { return isoLocal(new Date()); }), entryDate = s1[0], setEntryDate = s1[1];
+  var s2 = useState(""), weightVal = s2[0], setWeightVal = s2[1];
+
+  function addEntry() {
+    var w = parseFloat(weightVal);
+    if (!entryDate || isNaN(w)) return;
+    var dateStr = dateFromIso(entryDate).toDateString();
+    props.setLog(function (l) {
+      var next = l.filter(function (e) { return e.date !== dateStr; });
+      next.push({ date: dateStr, weight: w });
+      next.sort(function (a, b) { return new Date(a.date) - new Date(b.date); });
+      return next;
+    });
+    setWeightVal("");
+  }
+  function removeEntry(dateStr) {
+    props.setLog(function (l) { return l.filter(function (e) { return e.date !== dateStr; }); });
+  }
+
+  var weeklyAvgs = computeWeeklyAverages(log);
+  var currentAvg = weeklyAvgs.length ? weeklyAvgs[0].avg : null;
+  var remaining = WEIGHT_GOAL.target - (currentAvg !== null ? currentAvg : WEIGHT_GOAL.start);
+  var range = WEIGHT_GOAL.target - WEIGHT_GOAL.start;
+  var pct = currentAvg !== null ? Math.max(0, Math.min(100, Math.round(((currentAvg - WEIGHT_GOAL.start) / range) * 100))) : 0;
+  var barColor = pct >= 100 ? "#059669" : "#3B82F6";
+
+  return html`<div style=${card}>
+    <div style=${Object.assign({}, row, { marginBottom: 8 })}>
+      <span style=${lbl}>Weight Tracking</span>
+      <span style=${atag(barColor)}>${remaining > 0 ? remaining.toFixed(1) + "kg to go" : "Goal reached"}</span>
+    </div>
+    <div style=${{ background: "#1a1a1a", borderRadius: 4, height: 6, marginBottom: 10 }}>
+      <div style=${{ background: barColor, borderRadius: 4, height: 6, width: pct + "%", transition: "width 0.3s" }}></div>
+    </div>
+    <div style=${{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, marginBottom: 10 }}>
+      <div style=${{ textAlign: "center" }}>
+        <div style=${{ fontSize: 18, fontWeight: 700 }}>${currentAvg !== null ? currentAvg.toFixed(1) : "—"}kg</div>
+        <div style=${{ fontSize: 10, color: "#444", marginTop: 2 }}>Weekly Avg ${weeklyAvgs.length && !weeklyAvgs[0].complete ? "(in progress)" : ""}</div>
+      </div>
+      <div style=${{ textAlign: "center" }}>
+        <div style=${{ fontSize: 18, fontWeight: 700 }}>${WEIGHT_GOAL.target}kg</div>
+        <div style=${{ fontSize: 10, color: "#444", marginTop: 2 }}>Target</div>
+      </div>
+    </div>
+    <div style=${{ display: "flex", gap: 6, marginBottom: 10 }}>
+      <input style=${Object.assign({}, inp, { flex: 1 })} type="date" value=${entryDate} onChange=${function (e) { setEntryDate(e.target.value); }} />
+      <input style=${Object.assign({}, inp, { width: 80 })} type="number" step="0.1" placeholder="kg" value=${weightVal} onChange=${function (e) { setWeightVal(e.target.value); }} />
+      <button style=${{ background: "#3B82F633", border: "none", color: "#3B82F6", borderRadius: 6, width: 36, fontSize: 18, cursor: "pointer" }} onClick=${addEntry}>+</button>
+    </div>
+    ${weeklyAvgs.length ? html`<div style=${{ marginBottom: 10 }}>
+      <div style=${Object.assign({}, lbl, { marginBottom: 6, fontSize: 9 })}>Weekly Averages</div>
+      ${weeklyAvgs.map(function (w) {
+        return html`<div key=${w.week} style=${Object.assign({}, row, { padding: "5px 0", borderBottom: "1px solid #111" })}>
+          <span style=${{ fontSize: 12, color: "#888" }}>w/o ${new Date(w.week).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} ${!w.complete ? "(in progress)" : ""}</span>
+          <span style=${{ fontSize: 12, fontWeight: 600 }}>${w.avg.toFixed(1)}kg <span style=${{ color: "#333" }}>· ${w.count}/7</span></span>
+        </div>`;
+      })}
+    </div>` : null}
+    ${log.length ? html`<div>
+      <div style=${Object.assign({}, row, { marginBottom: 6 })}>
+        <span style=${Object.assign({}, lbl, { fontSize: 9 })}>Daily Log</span>
+        <span style=${{ fontSize: 11, color: "#555" }}>${log.length} entries</span>
+      </div>
+      ${log.slice().reverse().map(function (e) {
+        var dt = new Date(e.date);
+        var dispDate = isNaN(dt) ? e.date : dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+        return html`<div key=${e.date} style=${Object.assign({}, row, { padding: "5px 0", borderBottom: "1px solid #111" })}>
+          <span style=${{ fontSize: 12, color: "#888" }}>${dispDate}</span>
+          <div style=${{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style=${{ fontSize: 12, fontWeight: 600 }}>${e.weight}kg</span>
+            <button style=${{ background: "none", border: "none", color: "#E74C3C", fontSize: 12, cursor: "pointer" }} onClick=${function () { removeEntry(e.date); }}>✕</button>
+          </div>
+        </div>`;
+      })}
+    </div>` : html`<div style=${{ fontSize: 12, color: "#555" }}>No weigh-ins logged yet.</div>`}
+  </div>`;
+}
+
 function TrainTab(props) {
   var today = getDay();
   var todayExercises = props.workoutPlan[today] || [];
@@ -738,6 +840,7 @@ function TrainTab(props) {
       })}
       <${WorkoutLogger} exercises=${todayExercises} log=${props.workoutLog} setLog=${props.setWorkoutLog} />
       <${ExerciseProgress} />
+      <${WeightTracker} log=${props.weightLog} setLog=${props.setWeightLog} />
       <${ScheduleEditor} schedule=${props.schedule} onSave=${props.onSaveSchedule} workoutPlan=${props.workoutPlan} onSavePlan=${props.onSaveWorkoutPlan} />
     </div>
   </div>`;
@@ -1046,6 +1149,7 @@ function App() {
   var s6 = useState(function () { return store("trainwk_" + wk) || {}; }), trainWk = s6[0], setTrainWk = s6[1];
   var s9 = useState(function () { return store("finance_tx") || []; }), tx = s9[0], setTx = s9[1];
   var sG = useState(loadGoals), goals = sG[0], setGoals = sG[1];
+  var sWt = useState(loadWeightLog), weightLog = sWt[0], setWeightLog = sWt[1];
 
   useEffect(function () { store("habits_cfg", habitsCfg); schedulePush(); }, [habitsCfg]);
   useEffect(function () { store("workout_plan_cfg", workoutPlan); schedulePush(); }, [workoutPlan]);
@@ -1055,6 +1159,7 @@ function App() {
   useEffect(function () { store("trainwk_" + wk, trainWk); schedulePush(); }, [trainWk]);
   useEffect(function () { store("finance_tx", tx); schedulePush(); }, [tx]);
   useEffect(function () { store("finance_goals", goals); schedulePush(); }, [goals]);
+  useEffect(function () { store("weight_log", weightLog); schedulePush(); }, [weightLog]);
   useEffect(function () {
     var override = {};
     ALL_DAYS.forEach(function (d) {
@@ -1087,7 +1192,7 @@ function App() {
   return html`<div style=${{ minHeight: "100vh", background: "#080808", color: "#E0DDD6", paddingBottom: 80 }}>
     ${tab === "today" ? html`<${TodayTab} schedDay=${schedDay} setSchedDay=${setSchedDay} schedule=${schedule} hDone=${hDone} allHLen=${allH.length} pTotal=${pTotal} kcalTotal=${kcalTotal} pTarget=${pTarget} kcalTarget=${kcalTarget} />` : null}
     ${tab === "habits" ? html`<${HabitsTab} habits=${habits} toggle=${toggle} allH=${allH} hDone=${hDone} pLog=${pLog} addP=${addP} setPLog=${setPLog} pTotal=${pTotal} pTarget=${pTarget} kcalTotal=${kcalTotal} kcalTarget=${kcalTarget} habitsCfg=${habitsCfg} setHabitsCfg=${setHabitsCfg} />` : null}
-    ${tab === "training" ? html`<${TrainTab} schedule=${schedule} onSaveSchedule=${setSchedule} trainWk=${trainWk} setTrainWk=${setTrainWk} workoutPlan=${workoutPlan} onSaveWorkoutPlan=${setWorkoutPlan} workoutLog=${workoutLog} setWorkoutLog=${setWorkoutLog} />` : null}
+    ${tab === "training" ? html`<${TrainTab} schedule=${schedule} onSaveSchedule=${setSchedule} trainWk=${trainWk} setTrainWk=${setTrainWk} workoutPlan=${workoutPlan} onSaveWorkoutPlan=${setWorkoutPlan} workoutLog=${workoutLog} setWorkoutLog=${setWorkoutLog} weightLog=${weightLog} setWeightLog=${setWeightLog} />` : null}
     ${tab === "ina" ? html`<${InaTab} />` : null}
     ${tab === "trends" ? html`<${TrendsTab} />` : null}
     ${tab === "finance" ? html`<${FinanceTab} tx=${tx} setTx=${setTx} goals=${goals} setGoals=${setGoals} />` : null}
